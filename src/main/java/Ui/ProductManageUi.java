@@ -2,6 +2,7 @@ package Ui;
 
 import entity.Product;
 import service.ProductService;
+import utils.StyleUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -16,73 +17,89 @@ public class ProductManageUi extends JFrame {
     private JTextField searchField;
 
     public ProductManageUi() {
-        this.productService = new ProductService();
-        setTitle("商品/库存管理");
-        setSize(900, 600);
+        this.productService = new ProductService(); // 初始化 Service
+
+        // 1. 应用全局主题
+        StyleUtils.initGlobalTheme();
+
+        setTitle("📦 商品库存管理中心");
+        setSize(950, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10)); // 使用 BorderLayout
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(new BorderLayout(10, 10));
 
         initView();
         loadProductsToTable();
-
         setVisible(true);
     }
 
     private void initView() {
-        // --- 顶部搜索和操作区域 ---
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        // === 顶部功能栏 ===
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        topPanel.setBackground(Color.WHITE);
+        topPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
         add(topPanel, BorderLayout.NORTH);
 
+        // 搜索区
+        topPanel.add(new JLabel("📦 商品名称:"));
         searchField = new JTextField(15);
-        topPanel.add(new JLabel("搜索名称:"));
+        StyleUtils.styleTextField(searchField);
         topPanel.add(searchField);
 
-        JButton searchBtn = new JButton("搜索");
+        JButton searchBtn = new JButton("查询");
+        StyleUtils.styleButton(searchBtn, StyleUtils.COLOR_PRIMARY);
         searchBtn.addActionListener(e -> searchProduct());
         topPanel.add(searchBtn);
 
-        JButton refreshBtn = new JButton("刷新列表");
+        JButton refreshBtn = new JButton("🔄 刷新");
+        StyleUtils.styleButton(refreshBtn, StyleUtils.COLOR_INFO);
         refreshBtn.addActionListener(e -> loadProductsToTable());
         topPanel.add(refreshBtn);
 
+        // 分隔线
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
 
-        // --- CRUD 操作按钮 ---
-        JButton addBtn = new JButton("新增商品");
-        addBtn.addActionListener(e -> openAddEditDialog(null));
+        // CRUD 操作区
+        JButton addBtn = new JButton("➕ 新增商品");
+        StyleUtils.styleButton(addBtn, StyleUtils.COLOR_SUCCESS);
+        addBtn.addActionListener(e -> openAddEditDialog(null)); // null 表示新增
         topPanel.add(addBtn);
 
-        JButton editBtn = new JButton("修改信息");
+        JButton editBtn = new JButton("✏️ 修改信息");
+        StyleUtils.styleButton(editBtn, StyleUtils.COLOR_WARNING);
         editBtn.addActionListener(e -> editProduct());
         topPanel.add(editBtn);
 
-        JButton deleteBtn = new JButton("删除商品");
-        deleteBtn.addActionListener(e -> deleteProduct());
-        topPanel.add(deleteBtn);
+        JButton delBtn = new JButton("🗑️ 下架/删除");
+        StyleUtils.styleButton(delBtn, StyleUtils.COLOR_DANGER);
+        delBtn.addActionListener(e -> deleteProduct());
+        topPanel.add(delBtn);
 
-        // --- 表格主体 ---
-        String[] columns = {"ID", "名称", "单价 (¥)", "当前库存"};
+        // === 中间表格区域 ===
+        // 注意：这里移除了 Description 列，因为 Product 实体类中没有该字段
+        String[] columns = {"ID", "商品名称", "单价 (¥)", "当前库存"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
+
         productTable = new JTable(tableModel);
-        productTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        productTable.setRowHeight(25);
-        add(new JScrollPane(productTable), BorderLayout.CENTER);
+        StyleUtils.styleTable(productTable); // 应用美化样式
+
+        JScrollPane scrollPane = new JScrollPane(productTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // 四周留白
+        scrollPane.getViewport().setBackground(Color.WHITE);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
-    // ==================== 数据加载与操作 ====================
+    // ==================== 核心业务方法 (保持原名) ====================
 
-    /**
-     * 从数据库加载数据并填充表格
-     */
     private void loadProductsToTable() {
         tableModel.setRowCount(0);
-        List<Product> products = productService.getAllProducts();
-
-        for (Product p : products) {
+        List<Product> list = productService.getAllProducts();
+        for (Product p : list) {
             tableModel.addRow(new Object[]{
                     p.getProductId(),
                     p.getName(),
@@ -90,12 +107,8 @@ public class ProductManageUi extends JFrame {
                     p.getStock()
             });
         }
-        setTitle(String.format("商品/库存管理 (共 %d 种商品)", products.size()));
     }
 
-    /**
-     * 搜索商品
-     */
     private void searchProduct() {
         String keyword = searchField.getText().trim();
         if (keyword.isEmpty()) {
@@ -104,153 +117,123 @@ public class ProductManageUi extends JFrame {
         }
 
         tableModel.setRowCount(0);
-        List<Product> products = productService.searchProducts(keyword);
-
-        for (Product p : products) {
+        // 假设 Service 有 searchProducts 方法，如果没有请检查 ProductService
+        List<Product> list = productService.searchProducts(keyword);
+        for (Product p : list) {
             tableModel.addRow(new Object[]{
-                    p.getProductId(),
-                    p.getName(),
-                    p.getPrice(),
-                    p.getStock()
+                    p.getProductId(), p.getName(), p.getPrice(), p.getStock()
             });
         }
     }
 
-    /**
-     * 删除产品
-     */
-    private void deleteProduct() {
-        int selectedRow = productTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "请选择要删除的商品！", "提示", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int productId = (int) tableModel.getValueAt(selectedRow, 0);
-        String name = (String) tableModel.getValueAt(selectedRow, 1);
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "确定要删除商品 [" + name + "] 吗？\n删除后该商品将无法售卖，相关订单记录将保留。",
-                "确认删除", JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            if (productService.deleteProduct(productId)) {
-                JOptionPane.showMessageDialog(this, "✅ 删除成功！", "成功", JOptionPane.INFORMATION_MESSAGE);
-                loadProductsToTable(); // 刷新列表
-            } else {
-                JOptionPane.showMessageDialog(this, "❌ 删除失败！可能存在关联数据。", "错误", JOptionPane.ERROR_MESSAGE);
-            }
-        }
+    private void addProduct() {
+        // 为了更好的体验，我们将 add 和 edit 逻辑合并到了 openAddEditDialog
+        openAddEditDialog(null);
     }
 
-    /**
-     * 编辑产品信息，打开编辑对话框
-     */
     private void editProduct() {
-        int selectedRow = productTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "请选择要修改的商品！", "提示", JOptionPane.WARNING_MESSAGE);
+        int row = productTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "请先选择要修改的商品！");
             return;
         }
 
-        // 获取选中行的 Product 对象
-        int productId = (int) tableModel.getValueAt(selectedRow, 0);
-        String name = (String) tableModel.getValueAt(selectedRow, 1);
-        double price = (double) tableModel.getValueAt(selectedRow, 2);
-        int stock = (int) tableModel.getValueAt(selectedRow, 3);
+        // 从表格获取当前选中行的数据
+        int id = (int) tableModel.getValueAt(row, 0);
+        String name = (String) tableModel.getValueAt(row, 1);
+        double price = (double) tableModel.getValueAt(row, 2);
+        int stock = (int) tableModel.getValueAt(row, 3);
 
+        // 构造一个临时的 Product 对象传给对话框
         Product p = new Product();
-        p.setProductId(productId);
+        p.setProductId(id);
         p.setName(name);
         p.setPrice(price);
         p.setStock(stock);
 
-        openAddEditDialog(p); // 打开编辑对话框
+        openAddEditDialog(p);
     }
 
-
-    // ==================== 增改对话框 ====================
-
-    /**
-     * 打开新增或编辑商品的对话框
-     */
-    private void openAddEditDialog(Product product) {
-        boolean isEdit = (product != null);
-        JDialog dialog = new JDialog(this, isEdit ? "编辑商品" : "新增商品", true);
-        dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(this);
-        dialog.setLayout(new GridLayout(5, 2, 10, 10));
-
-        // --- 组件 ---
-        JTextField nameField = new JTextField(isEdit ? product.getName() : "");
-        JTextField priceField = new JTextField(isEdit ? String.valueOf(product.getPrice()) : "");
-        JTextField stockField = new JTextField(isEdit ? String.valueOf(product.getStock()) : "");
-
-        // --- 布局 ---
-        if (isEdit) {
-            dialog.add(new JLabel("商品ID (不可改):"));
-            dialog.add(new JLabel(String.valueOf(product.getProductId())));
-        } else {
-            dialog.add(new JLabel()); // 占位
-            dialog.add(new JLabel());
+    private void deleteProduct() {
+        int row = productTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "请先选择要删除的商品！");
+            return;
         }
 
-        dialog.add(new JLabel("商品名称:"));
-        dialog.add(nameField);
+        int id = (int) tableModel.getValueAt(row, 0);
+        String name = (String) tableModel.getValueAt(row, 1);
 
-        dialog.add(new JLabel("单价 (¥):"));
-        dialog.add(priceField);
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "确定要下架并删除商品 [" + name + "] 吗？\n(注意：这将永久删除该商品数据)",
+                "确认删除", JOptionPane.YES_NO_OPTION);
 
-        dialog.add(new JLabel("库存数量:"));
-        dialog.add(stockField);
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (productService.deleteProduct(id)) {
+                JOptionPane.showMessageDialog(this, "✅ 删除成功！");
+                loadProductsToTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "❌ 删除失败，可能存在关联订单数据。");
+            }
+        }
+    }
 
-        JButton saveBtn = new JButton(isEdit ? "保存修改" : "添加商品");
-        saveBtn.addActionListener(e -> {
-            // 验证并保存
+    // ==================== 辅助：弹窗对话框 ====================
+
+    private void openAddEditDialog(Product product) {
+        boolean isEdit = (product != null);
+        String title = isEdit ? "修改商品信息" : "新增商品入库";
+
+        // 使用 JPanel 构造弹窗内容
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+
+        JTextField nameF = new JTextField(isEdit ? product.getName() : "");
+        JTextField priceF = new JTextField(isEdit ? String.valueOf(product.getPrice()) : "");
+        JTextField stockF = new JTextField(isEdit ? String.valueOf(product.getStock()) : "");
+
+        panel.add(new JLabel("商品名称:"));
+        panel.add(nameF);
+        panel.add(new JLabel("销售单价 (¥):"));
+        panel.add(priceF);
+        panel.add(new JLabel("库存数量:"));
+        panel.add(stockF);
+
+        int opt = JOptionPane.showConfirmDialog(this, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (opt == JOptionPane.OK_OPTION) {
             try {
-                String name = nameField.getText().trim();
-                double price = Double.parseDouble(priceField.getText().trim());
-                int stock = Integer.parseInt(stockField.getText().trim());
+                String name = nameF.getText().trim();
+                double price = Double.parseDouble(priceF.getText().trim());
+                int stock = Integer.parseInt(stockF.getText().trim());
 
-                if (name.isEmpty() || price <= 0 || stock < 0) {
-                    JOptionPane.showMessageDialog(dialog, "请检查输入项：名称不能为空，价格必须大于0，库存不能小于0。", "输入错误", JOptionPane.ERROR_MESSAGE);
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "商品名称不能为空！");
                     return;
                 }
 
-                Product newProduct = product;
-                if (!isEdit) {
-                    newProduct = new Product();
-                }
-
-                newProduct.setName(name);
-                newProduct.setPrice(price);
-                newProduct.setStock(stock);
+                // 构造对象
+                Product newP = isEdit ? product : new Product();
+                newP.setName(name);
+                newP.setPrice(price);
+                newP.setStock(stock);
 
                 boolean success;
                 if (isEdit) {
-                    success = productService.updateProduct(newProduct);
+                    success = productService.updateProduct(newP);
                 } else {
-                    success = productService.addProduct(newProduct);
+                    success = productService.addProduct(newP);
                 }
 
                 if (success) {
-                    JOptionPane.showMessageDialog(dialog, isEdit ? "修改成功！" : "添加成功！", "成功", JOptionPane.INFORMATION_MESSAGE);
-                    dialog.dispose(); // 关闭弹窗
-                    loadProductsToTable(); // 刷新主界面
+                    JOptionPane.showMessageDialog(this, "✅ 操作成功！");
+                    loadProductsToTable();
                 } else {
-                    JOptionPane.showMessageDialog(dialog, isEdit ? "修改失败！" : "添加失败！", "错误", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "❌ 操作失败，请重试。");
                 }
 
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "价格和库存必须是有效数字！", "输入错误", JOptionPane.ERROR_MESSAGE);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "输入错误：价格和库存必须是数字！");
             }
-        });
-
-        dialog.add(saveBtn);
-        JButton cancelBtn = new JButton("取消");
-        cancelBtn.addActionListener(e -> dialog.dispose());
-        dialog.add(cancelBtn);
-
-        dialog.setVisible(true);
+        }
     }
 }

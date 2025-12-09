@@ -13,10 +13,9 @@ import java.util.Map;
 public class StatisticsDAO {
 
     /**
-     * 获取总收入 (所有已支付订单的金额总和)
+     * 获取总收入
      */
     public double getTotalRevenue() {
-        // IFNULL/COALESCE 防止没有订单时返回 NULL 导致报错
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE payment_status LIKE 'paid%'";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -44,10 +43,9 @@ public class StatisticsDAO {
     }
 
     /**
-     * 获取今日订单数 (监控业务活跃度)
+     * 获取今日订单数
      */
     public int getTodayOrderCount() {
-        // CURDATE() 是 MySQL 获取当前日期的函数
         String sql = "SELECT COUNT(*) FROM `order` WHERE DATE(order_time) = CURDATE()";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -60,7 +58,7 @@ public class StatisticsDAO {
     }
 
     /**
-     * 获取库存紧张的商品数量 (假设库存 < 10 算紧张)
+     * 获取库存紧张商品数
      */
     public int getLowStockProductCount() {
         String sql = "SELECT COUNT(*) FROM product WHERE stock < 10";
@@ -75,16 +73,45 @@ public class StatisticsDAO {
     }
 
     /**
-     * 获取最近的 50 条订单记录 (用于列表展示)
-     * 包含：订单ID, 会员名(联表), 类型, 金额, 时间
+     * 【新增】获取各类型业务的营收占比 (用于画图)
+     * 返回: Map<业务类型, 总金额>
+     */
+    public Map<String, Double> getRevenueByType() {
+        Map<String, Double> map = new HashMap<>();
+        String sql = "SELECT order_type, SUM(amount) FROM `order` WHERE payment_status LIKE 'paid%' GROUP BY order_type";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                String type = rs.getString(1);
+                double amount = rs.getDouble(2);
+
+                // 简单的类型名转换
+                if ("membership".equalsIgnoreCase(type)) type = "会员卡/续费";
+                else if ("product".equalsIgnoreCase(type)) type = "商品售卖";
+                else if ("course".equalsIgnoreCase(type)) type = "课程预约";
+                else if ("recharge".equalsIgnoreCase(type)) type = "余额充值";
+                else if ("renewal".equalsIgnoreCase(type)) type = "续费业务";
+
+                map.put(type, amount);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    /**
+     * 获取最近订单 (用于表格)
      */
     public List<Map<String, Object>> getRecentOrders() {
         List<Map<String, Object>> list = new ArrayList<>();
-        // 联表查询：order 表左连接 member 表，以便拿到会员名字（如果是散客则为NULL）
-        String sql = "SELECT o.order_id, m.name AS member_name, o.order_type, o.amount, o.order_time " +
+        String sql = "SELECT o.order_id, m.name AS member_name, o.order_type, o.amount, o.order_time, o.payment_status " +
                 "FROM `order` o " +
                 "LEFT JOIN member m ON o.member_id = m.member_id " +
-                "ORDER BY o.order_time DESC LIMIT 50";
+                "ORDER BY o.order_time DESC LIMIT 100"; // 查最近100条
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -93,12 +120,12 @@ public class StatisticsDAO {
             while (rs.next()) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", rs.getInt("order_id"));
-                // 如果 member_name 是 null，说明是散客
                 String name = rs.getString("member_name");
                 map.put("name", name == null ? "散客" : name);
                 map.put("type", rs.getString("order_type"));
                 map.put("amount", rs.getDouble("amount"));
                 map.put("time", rs.getTimestamp("order_time"));
+                map.put("status", rs.getString("payment_status"));
                 list.add(map);
             }
         } catch (SQLException e) {
