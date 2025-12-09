@@ -1,5 +1,5 @@
-import main.java.dao.MembershipTypeDAO;
-import main.java.entity.MembershipType;
+import dao.MembershipTypeDAO;
+import entity.MembershipType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

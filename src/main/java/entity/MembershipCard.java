@@ -1,4 +1,4 @@
-package main.java.entity;
+package entity;
 
 import java.util.Date;
 
@@ -6,7 +6,7 @@ public class MembershipCard {
     private int cardId;
     private int memberId;
     private int typeId;                    // 外键关联 membership_type 表
-    private MembershipType membershipType; // 关联的类型对象
+    private entity.MembershipType membershipType; // 关联的类型对象
     private Date startDate;
     private Date endDate;
     private String cardStatus; // 'active','inactive','expired'
@@ -23,7 +23,7 @@ public class MembershipCard {
         this.cardStatus = cardStatus;
     }
 
-    public MembershipCard(int cardId, int memberId, MembershipType membershipType, Date startDate, Date endDate, String cardStatus) {
+    public MembershipCard(int cardId, int memberId, entity.MembershipType membershipType, Date startDate, Date endDate, String cardStatus) {
         this.cardId = cardId;
         this.memberId = memberId;
         this.membershipType = membershipType;
@@ -57,11 +57,11 @@ public class MembershipCard {
         this.typeId = typeId;
     }
 
-    public MembershipType getMembershipType() {
+    public entity.MembershipType getMembershipType() {
         return membershipType;
     }
 
-    public void setMembershipType(MembershipType membershipType) {
+    public void setMembershipType(entity.MembershipType membershipType) {
         this.membershipType = membershipType;
         if (membershipType != null) {
             this.typeId = membershipType.getTypeId();

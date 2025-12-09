@@ -1,16 +1,15 @@
-package main.java.service;
+package service;
 
-import main.java.dao.CourseDAO;
-import main.java.dao.BookingDAO;
-import main.java.dao.EmployeeDAO;
-import main.java.dao.EmployeeRoleDAO;
-import main.java.entity.Booking;
-import main.java.entity.Course;
-import main.java.entity.Employee;
-
-import java.util.Date;
+import dao.BookingDAO;
+import dao.CourseDAO;
+import dao.EmployeeDAO;
+import dao.EmployeeRoleDAO;
+import entity.Booking;
+import entity.Course;
+import entity.Employee;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 

@@ -1,12 +1,12 @@
-package main.java.service;
+package service;
 
 
-import main.java.dao.MemberDAO;
-import main.java.dao.EmployeeDAO;
-import main.java.entity.Member;
-import main.java.entity.Employee;
-import main.java.entity.UserInfo;
-import main.utils.DBUtil;
+import dao.MemberDAO;
+import dao.EmployeeDAO;
+import entity.Member;
+import entity.Employee;
+import entity.UserInfo;
+import utils.DBUtil;
 import java.sql.*;
 
 public class UserService {

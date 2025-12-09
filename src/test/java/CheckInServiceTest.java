@@ -1,8 +1,8 @@
-import main.java.dao.CheckInDAO;
-import main.java.dao.MemberDAO;
-import main.java.dao.MembershipCardDAO;
-import main.java.entity.CheckIn;
-import main.java.entity.Member;
+import dao.CheckInDAO;
+import dao.MemberDAO;
+import dao.MembershipCardDAO;
+import entity.CheckIn;
+import entity.Member;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

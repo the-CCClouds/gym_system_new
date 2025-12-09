@@ -1,7 +1,7 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.Course;
-import main.utils.DBUtil;
+import entity.Course;
+import utils.DBUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -245,7 +245,7 @@ public class CourseDAO {
             pstmt.setInt(4, course.getMaxCapacity());
             pstmt.setInt(5, course.getEmployeeId());
             // 【新增这一行】设置第 6 个参数：将 Date 转为 SQL Timestamp
-            pstmt.setTimestamp(6, main.utils.DateUtils.toSqlTimestamp(course.getCourseTime()));
+            pstmt.setTimestamp(6, utils.DateUtils.toSqlTimestamp(course.getCourseTime()));
             int affectedRows = pstmt.executeUpdate();
 
             // 获取自动生成的ID
@@ -295,7 +295,7 @@ public class CourseDAO {
             pstmt.setInt(4, course.getMaxCapacity());
             pstmt.setInt(5, course.getEmployeeId());
             // 【新增这一行】设置第 6 个参数：时间
-            pstmt.setTimestamp(6, main.utils.DateUtils.toSqlTimestamp(course.getCourseTime()));
+            pstmt.setTimestamp(6, utils.DateUtils.toSqlTimestamp(course.getCourseTime()));
 
             // 【注意】ID 变成了第 7 个参数
             pstmt.setInt(7, course.getCourseId());

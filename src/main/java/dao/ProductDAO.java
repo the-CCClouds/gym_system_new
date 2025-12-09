@@ -1,7 +1,7 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.Product;
-import main.utils.DBUtil;
+import entity.Product;
+import utils.DBUtil;
 
 import java.sql.*;
 import java.util.ArrayList;

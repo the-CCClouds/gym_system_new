@@ -1,12 +1,12 @@
 package Ui;
 
 import com.toedter.calendar.JDateChooser; // 引入日历组件
-import main.java.entity.Course;
-import main.java.entity.Member;
-import main.java.service.BookingService;
-import main.java.service.CourseService;
-import main.java.service.CourseService.CourseDetail;
-import main.utils.DateUtils; // 引入工具类
+import entity.Course;
+import entity.Member;
+import service.BookingService;
+import service.CourseService;
+import service.CourseService.CourseDetail;
+import utils.DateUtils; // 引入工具类
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

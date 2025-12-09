@@ -1,12 +1,12 @@
-package main.java.entity;
+package entity;
 
 import java.util.Date;
 
-public class Employee implements Person{
+public class Employee implements entity.Person {
     private int employeeId;
     private String name;
     private int roleId;  // 外键关联 employee_role 表
-    private EmployeeRole employeeRole;  // 关联的角色对象
+    private entity.EmployeeRole employeeRole;  // 关联的角色对象
     private String phone;
     private Date hireDate; // 入职日期
 
@@ -21,7 +21,7 @@ public class Employee implements Person{
         this.hireDate = hireDate;
     }
 
-    public Employee(int employeeId, String name, EmployeeRole employeeRole, String phone, Date hireDate) {
+    public Employee(int employeeId, String name, entity.EmployeeRole employeeRole, String phone, Date hireDate) {
         this.employeeId = employeeId;
         this.name = name;
         this.employeeRole = employeeRole;
@@ -56,11 +56,11 @@ public class Employee implements Person{
         this.roleId = roleId;
     }
 
-    public EmployeeRole getEmployeeRole() {
+    public entity.EmployeeRole getEmployeeRole() {
         return employeeRole;
     }
 
-    public void setEmployeeRole(EmployeeRole employeeRole) {
+    public void setEmployeeRole(entity.EmployeeRole employeeRole) {
         this.employeeRole = employeeRole;
         if (employeeRole != null) {
             this.roleId = employeeRole.getRoleId();

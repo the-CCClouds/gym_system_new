@@ -1,11 +1,11 @@
-import main.java.dao.MembershipCardDAO;
-import main.java.dao.MembershipTypeDAO;
-import main.java.entity.MembershipCard;
-import main.java.entity.MembershipType;
+import dao.MembershipCardDAO;
+import dao.MembershipTypeDAO;
+import entity.MembershipCard;
+import entity.MembershipType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.List;
 import java.util.Map;

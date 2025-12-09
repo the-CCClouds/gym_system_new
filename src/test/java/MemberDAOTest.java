@@ -1,9 +1,9 @@
-import main.java.dao.MemberDAO;
-import main.java.entity.Member;
+import dao.MemberDAO;
+import entity.Member;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.List;
 import java.util.Map;

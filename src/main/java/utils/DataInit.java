@@ -1,8 +1,8 @@
-package main.utils;
+package utils;
 
-import main.java.entity.Employee;
-import main.java.service.EmployeeService;
-import main.java.service.UserService;
+import entity.Employee;
+import service.EmployeeService;
+import service.UserService;
 
 /**
  * 这是一个临时工具类，用来生成测试用的员工账号。

@@ -1,8 +1,8 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.Order;
-import main.utils.DBUtil;
-import main.utils.DateUtils;
+import entity.Order;
+import utils.DBUtil;
+import utils.DateUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -92,12 +92,22 @@ public class OrderDAO {
             return false;
         }
 
+
         String sql = "INSERT INTO `order` (member_id, order_type, amount, order_time, payment_status) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            // 原来的写法（会导致散客购买失败）：
+            // pstmt.setInt(1, order.getMemberId());
 
-            pstmt.setInt(1, order.getMemberId());
+            // ✅ 修改后的写法（支持散客）：
+            if (order.getMemberId() <= 0) {
+                // 如果 ID 是 0 或负数，就在数据库里存 NULL (表示没有会员)
+                pstmt.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                // 如果有具体的 ID，就存进去
+                pstmt.setInt(1, order.getMemberId());
+            }
             pstmt.setString(2, order.getOrderType());
             pstmt.setDouble(3, order.getAmount());
             pstmt.setTimestamp(4, order.getOrderTime() != null ? 

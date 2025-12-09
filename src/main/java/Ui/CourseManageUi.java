@@ -1,9 +1,9 @@
-package main.java.Ui;
+package Ui;
 
-import main.java.entity.Course;
-import main.java.entity.Employee;
-import main.java.service.CourseService;
-import main.java.service.CourseService.CourseDetail;
+import entity.Course;
+import entity.Employee;
+import service.CourseService;
+import service.CourseService.CourseDetail;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -97,7 +97,7 @@ public class CourseManageUi extends JFrame {
         for (Course c : courses) {
 
             // 【新增】格式化时间
-            String timeStr = main.utils.DateUtils.formatDateTime(c.getCourseTime());
+            String timeStr = utils.DateUtils.formatDateTime(c.getCourseTime());
 
 
             // 获取详情以显示教练名字和预约人数

@@ -1,9 +1,8 @@
 package Ui;
 
-import Ui.BookCourseUi;
-import main.java.dao.EmployeeRoleDAO;
-import main.java.entity.Employee;
-import main.java.entity.Member;
+import dao.EmployeeRoleDAO;
+import entity.Employee;
+import entity.Member;
 
 import javax.swing.*;
 import java.awt.*;
@@ -132,6 +131,10 @@ public class MainUi extends JFrame implements MouseListener {
         buyCardBtn.setBounds(startX, startY + btnHeight + gap, btnWidth, btnHeight);
         buyCardBtn.addMouseListener(this);
         this.getContentPane().add(buyCardBtn);
+
+        //商品售卖
+
+
     }
 
     // ==================== 员工菜单加载 (权限分离) ====================
@@ -176,6 +179,15 @@ public class MainUi extends JFrame implements MouseListener {
             memberManageBtn.setBounds(x + (w + gap) * 2, y, w, h);
             memberManageBtn.addMouseListener(this);
             this.getContentPane().add(memberManageBtn);
+            // 第二排：增值业务 (商品售卖)
+            int y2 = y + h + gap; // 下移一行
+
+            JButton shopBtn = new JButton("商品售卖 (POS)");
+            shopBtn.setFont(new Font("微软雅黑", Font.BOLD, 14));
+            shopBtn.setBackground(new Color(255, 230, 200)); // 淡橙色高亮
+            shopBtn.setBounds(x, y2, w, h); // 放在第二排第一个
+            shopBtn.addActionListener(e -> new ShopUi());
+            this.getContentPane().add(shopBtn);
         }
 
         // 3. 管理员权限 (Admin)
@@ -236,7 +248,7 @@ public class MainUi extends JFrame implements MouseListener {
         // --- 会员功能 ---
         else if (e.getSource() == myProfileBtn) {
             if (userData instanceof Member) {
-                new main.java.Ui.InfoUi((Member) userData).setVisible(true);
+                new Ui.InfoUi((Member) userData).setVisible(true);
             }
         } else if (e.getSource() == bookCourseBtn) {
             if (userData instanceof Member) {
@@ -244,11 +256,11 @@ public class MainUi extends JFrame implements MouseListener {
             }
         } else if (e.getSource() == myBookingsBtn) {
             if (userData instanceof Member) {
-                new main.java.Ui.MyBookingUi((Member) userData);
+                new Ui.MyBookingUi((Member) userData);
             }
         } else if (e.getSource() == buyCardBtn) {
             if (userData instanceof Member) {
-                new main.java.Ui.BuyCardUi((Member) userData);
+                new Ui.BuyCardUi((Member) userData);
             }
         }
 
@@ -260,22 +272,22 @@ public class MainUi extends JFrame implements MouseListener {
         // 2. 排课管理 (前台/管理员)
         else if (e.getSource() == courseManageBtn) {
             if (userData instanceof Employee) {
-                new main.java.Ui.CourseManageUi((Employee) userData);
+                new Ui.CourseManageUi((Employee) userData);
             }
         }
         // 3. 会员管理 (前台/管理员)
         else if (e.getSource() == memberManageBtn) {
-            new main.java.Ui.MemberManageUi();
+            new Ui.MemberManageUi();
         }
         // 4. 上课点名 (教练/管理员)
         else if (e.getSource() == courseCheckInBtn) {
             if (userData instanceof Employee) {
-                new main.java.Ui.CourseAttendanceUi((Employee) userData);
+                new Ui.CourseAttendanceUi((Employee) userData);
             }
         }
         // 5. 员工管理 (管理员独有)
         else if (e.getSource() == employeeManageBtn) {
-            new main.java.Ui.EmployeeManageUi();
+            new Ui.EmployeeManageUi();
         }
     }
 

@@ -1,6 +1,6 @@
-package main.java.Ui;
+package Ui;
 
-import main.java.entity.Member;
+import entity.Member;
 
 import javax.swing.*;
 import java.awt.*;

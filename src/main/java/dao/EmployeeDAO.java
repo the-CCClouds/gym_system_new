@@ -1,12 +1,15 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.Course;
-import main.java.entity.Employee;
-import main.java.entity.EmployeeRole;
-import main.utils.DBUtil;
-import main.utils.DateUtils;
+import entity.Course;
+import entity.Employee;
+import entity.EmployeeRole;
+import utils.DBUtil;
+import utils.DateUtils;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

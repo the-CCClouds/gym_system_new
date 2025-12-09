@@ -1,9 +1,9 @@
-import main.java.dao.CheckInDAO;
-import main.java.entity.CheckIn;
+import dao.CheckInDAO;
+import entity.CheckIn;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.Date;
 import java.util.List;

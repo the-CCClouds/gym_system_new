@@ -1,10 +1,10 @@
-package main.java.Ui;
+package Ui;
 
 import com.toedter.calendar.JDateChooser; // 确保引入了 jcalendar 库
-import main.java.entity.Employee;
-import main.java.service.CourseService;
-import main.java.service.EmployeeService;
-import main.utils.DateUtils;
+import entity.Employee;
+import service.CourseService;
+import service.EmployeeService;
+import utils.DateUtils;
 
 import javax.swing.*;
 import java.awt.*;

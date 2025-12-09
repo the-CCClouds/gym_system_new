@@ -1,8 +1,8 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.Booking;
-import main.utils.DBUtil;
-import main.utils.DateUtils;
+import entity.Booking;
+import utils.DBUtil;
+import utils.DateUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

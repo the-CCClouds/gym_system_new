@@ -1,9 +1,9 @@
-package main.java.Ui;
+package Ui;
 
-import main.java.entity.Booking;
-import main.java.entity.Member;
-import main.java.service.BookingService;
-import main.java.service.BookingService.BookingDetail;
+import entity.Booking;
+import entity.Member;
+import service.BookingService;
+import service.BookingService.BookingDetail;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -106,7 +106,7 @@ public class MyBookingUi extends JFrame {
             BookingDetail detail = bookingService.getBookingDetail(booking.getBookingId());
             String classTime = "未知";
             if (detail.getCourse() != null) {
-                classTime = main.utils.DateUtils.formatDateTime(detail.getCourse().getCourseTime());
+                classTime =utils.DateUtils.formatDateTime(detail.getCourse().getCourseTime());
             }
             Object[] rowData = {
                     booking.getBookingId(),

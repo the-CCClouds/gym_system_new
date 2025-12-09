@@ -1,9 +1,9 @@
-import main.java.dao.BookingDAO;
-import main.java.entity.Booking;
+import dao.BookingDAO;
+import entity.Booking;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.Date;
 import java.util.List;

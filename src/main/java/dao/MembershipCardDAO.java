@@ -1,19 +1,15 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.MembershipCard;
-import main.java.entity.MembershipType;
-import main.utils.DBUtil;
-import main.utils.DateUtils;
+import entity.MembershipCard;
+import entity.MembershipType;
+import utils.DBUtil;
+import utils.DateUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 会员卡数据访问对象
@@ -45,11 +41,13 @@ public class MembershipCardDAO {
     // ==================== 依赖 ====================
 
     private MembershipTypeDAO typeDAO;
+    private MemberDAO memberDAO; // 添加 MemberDAO 依赖
 
     // ==================== 构造方法 ====================
 
     public MembershipCardDAO() {
         this.typeDAO = new MembershipTypeDAO();
+        this.memberDAO = new MemberDAO(); // 初始化 MemberDAO
     }
 
     // ==================== 结果集映射 ====================
@@ -297,7 +295,7 @@ public class MembershipCardDAO {
      */
     public boolean addMembershipCard(MembershipCard card) {
         // 数据校验
-        if (!validateMemberExists(card.getMemberId())) {
+        if (memberDAO.getMemberById(card.getMemberId())==null) { // 使用 MemberDAO 验证会员是否存在
             System.err.println("添加失败：会员不存在 (memberId=" + card.getMemberId() + ")");
             return false;
         }
@@ -696,27 +694,6 @@ public class MembershipCardDAO {
     }
 
     // ==================== 校验方法 ====================
-
-    /**
-     * 校验会员是否存在
-     * 
-     * @param memberId 会员ID
-     * @return true表示存在
-     */
-    private boolean validateMemberExists(int memberId) {
-        String sql = "SELECT COUNT(*) AS count FROM member WHERE member_id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, memberId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next() && rs.getInt("count") > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     /**
      * 校验类型ID是否有效

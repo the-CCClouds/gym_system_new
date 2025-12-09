@@ -1,12 +1,12 @@
-import main.java.dao.OrderDAO;
-import main.java.dao.OrderProductDAO;
-import main.java.entity.Order;
-import main.java.entity.OrderProduct;
-import main.java.entity.Product;
+import dao.OrderDAO;
+import dao.OrderProductDAO;
+import entity.Order;
+import entity.OrderProduct;
+import entity.Product;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.List;

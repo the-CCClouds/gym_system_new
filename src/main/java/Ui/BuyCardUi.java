@@ -1,9 +1,9 @@
-package main.java.Ui;
+package Ui;
 
-import main.java.dao.MembershipCardDAO;
-import main.java.entity.Member;
-import main.java.service.MemberService;
-import main.java.service.MemberService.MemberDetail;
+import dao.MembershipCardDAO;
+import entity.Member;
+import service.MemberService;
+import service.MemberService.MemberDetail;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,8 +1,8 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.Member;
-import main.utils.DBUtil;
-import main.utils.DateUtils;
+import entity.Member;
+import utils.DBUtil;
+import utils.DateUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

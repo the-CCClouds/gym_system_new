@@ -1,15 +1,14 @@
-import main.java.entity.UserInfo;
-import main.java.service.UserService;
+import entity.UserInfo;
 import org.junit.jupiter.api.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import service.UserService;
+import utils.DBUtil;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import main.utils.DBUtil;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UserService 测试类

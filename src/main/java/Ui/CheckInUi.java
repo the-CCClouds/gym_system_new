@@ -1,8 +1,8 @@
 package Ui;
 
-import main.java.entity.Member;
-import main.java.service.MemberService;
-import main.java.service.MemberService.MemberDetail;
+import entity.Member;
+import service.MemberService;
+import service.MemberService.MemberDetail;
 import service.CheckInService;
 
 import javax.swing.*;

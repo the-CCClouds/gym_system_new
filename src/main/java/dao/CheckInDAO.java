@@ -1,8 +1,8 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.CheckIn;
-import main.utils.DBUtil;
-import main.utils.DateUtils;
+import entity.CheckIn;
+import utils.DBUtil;
+import utils.DateUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

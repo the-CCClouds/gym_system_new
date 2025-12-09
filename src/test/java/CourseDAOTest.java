@@ -1,5 +1,5 @@
-import main.java.dao.CourseDAO;
-import main.java.entity.Course;
+import dao.CourseDAO;
+import entity.Course;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

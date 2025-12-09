@@ -1,5 +1,5 @@
-import main.java.dao.ProductDAO;
-import main.java.entity.Product;
+import dao.ProductDAO;
+import entity.Product;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

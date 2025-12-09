@@ -1,5 +1,5 @@
-import main.java.dao.EmployeeRoleDAO;
-import main.java.entity.EmployeeRole;
+import dao.EmployeeRoleDAO;
+import entity.EmployeeRole;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

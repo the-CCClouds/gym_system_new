@@ -1,9 +1,9 @@
-import main.java.dao.OrderDAO;
-import main.java.entity.Order;
+import dao.OrderDAO;
+import entity.Order;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.List;
 

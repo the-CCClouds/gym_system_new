@@ -1,7 +1,7 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.EmployeeRole;
-import main.utils.DBUtil;
+import entity.EmployeeRole;
+import utils.DBUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

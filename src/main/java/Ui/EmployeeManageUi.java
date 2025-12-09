@@ -1,10 +1,10 @@
-package main.java.Ui;
+package Ui;
 
-import main.java.dao.EmployeeRoleDAO;
-import main.java.entity.Employee;
-import main.java.service.EmployeeService;
-import main.java.service.EmployeeService.EmployeeDetail;
-import main.java.service.UserService; // 【新增】引入 UserService
+import dao.EmployeeRoleDAO;
+import entity.Employee;
+import service.EmployeeService;
+import service.EmployeeService.EmployeeDetail;
+import service.UserService; // 【新增】引入 UserService
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -111,7 +111,7 @@ public class EmployeeManageUi extends JFrame {
                     e.getName(),
                     e.getPhone(),
                     detail.getRoleDisplayName(),
-                    main.utils.DateUtils.formatDate(e.getHireDate()),
+                    utils.DateUtils.formatDate(e.getHireDate()),
                     detail.getWorkDurationString()
             };
             tableModel.addRow(row);

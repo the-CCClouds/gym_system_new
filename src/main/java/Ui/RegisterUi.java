@@ -1,15 +1,15 @@
 package Ui;
 
-import main.java.service.MemberService;
-import main.java.service.UserService;
-import main.java.entity.Member;
+import com.toedter.calendar.JDateChooser;
+import entity.Member;
+import service.MemberService;
+import service.UserService;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Date;
-
-import com.toedter.calendar.JDateChooser;
 
 
 public class RegisterUi extends JFrame implements MouseListener {
@@ -38,7 +38,7 @@ public class RegisterUi extends JFrame implements MouseListener {
     JComboBox<String> genderComboBox = new JComboBox<>(new String[]{"男", "女"});
 
     //创建验证码
-    String generate = main.utils.LoginUtils.generateVerificationCode();
+    String generate = utils.LoginUtils.generateVerificationCode();
     JLabel generateJlabel = new JLabel(generate);
     JLabel codeTextLabel = new JLabel("验证码"); // 稍微加个提示字或者图标
 
@@ -210,7 +210,7 @@ public class RegisterUi extends JFrame implements MouseListener {
             if (!code.equalsIgnoreCase(generate)) {
                 JOptionPane.showMessageDialog(this, "验证码错误，请重新输入。");
                 codeJTextField.setText("");
-                generate = main.utils.LoginUtils.generateVerificationCode();
+                generate = utils.LoginUtils.generateVerificationCode();
                 generateJlabel.setText(generate);
                 return;
             }
@@ -248,7 +248,7 @@ public class RegisterUi extends JFrame implements MouseListener {
             }
         } else if (e.getSource() == generateJlabel) {
             // 刷新验证码
-            generate = main.utils.LoginUtils.generateVerificationCode();
+            generate = utils.LoginUtils.generateVerificationCode();
             generateJlabel.setText(generate);
         }
 
@@ -262,7 +262,7 @@ public class RegisterUi extends JFrame implements MouseListener {
         codeJTextField.setText("");
         birthdayChooser.setDate(null);
         genderComboBox.setSelectedIndex(0);
-        generate = main.utils.LoginUtils.generateVerificationCode();
+        generate = utils.LoginUtils.generateVerificationCode();
         generateJlabel.setText(generate);
     }
 

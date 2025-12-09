@@ -1,7 +1,7 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.MembershipType;
-import main.utils.DBUtil;
+import entity.MembershipType;
+import utils.DBUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

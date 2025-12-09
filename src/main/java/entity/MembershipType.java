@@ -1,4 +1,4 @@
-package main.java.entity;
+package entity;
 
 /**
  * 会员卡类型实体类：体现继承关系

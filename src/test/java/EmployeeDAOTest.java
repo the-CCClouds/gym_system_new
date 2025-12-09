@@ -1,12 +1,12 @@
-import main.java.dao.EmployeeDAO;
-import main.java.dao.EmployeeRoleDAO;
-import main.java.entity.Course;
-import main.java.entity.Employee;
-import main.java.entity.EmployeeRole;
+import dao.EmployeeDAO;
+import dao.EmployeeRoleDAO;
+import entity.Course;
+import entity.Employee;
+import entity.EmployeeRole;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.utils.DateUtils;
+import utils.DateUtils;
 
 import java.util.Date;
 import java.util.List;

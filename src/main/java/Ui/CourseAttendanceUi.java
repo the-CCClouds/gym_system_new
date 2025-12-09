@@ -1,14 +1,14 @@
-package main.java.Ui;
+package Ui;
 
 import com.toedter.calendar.JDateChooser; // 引入日历组件
-import main.java.dao.BookingDAO;
-import main.java.entity.Booking;
-import main.java.entity.Course;
-import main.java.entity.Employee;
-import main.java.service.BookingService;
-import main.java.service.BookingService.BookingDetail;
-import main.java.service.CourseService;
-import main.utils.DateUtils;
+import dao.BookingDAO;
+import entity.Booking;
+import entity.Course;
+import entity.Employee;
+import service.BookingService;
+import service.BookingService.BookingDetail;
+import service.CourseService;
+import utils.DateUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

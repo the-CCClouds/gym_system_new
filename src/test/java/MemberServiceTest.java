@@ -1,15 +1,15 @@
-import main.java.dao.MemberDAO;
-import main.java.dao.MembershipCardDAO;
-import main.java.entity.Member;
-import main.java.entity.MembershipCard;
+import dao.MemberDAO;
+import dao.MembershipCardDAO;
+import entity.Member;
+import entity.MembershipCard;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import main.java.service.MemberService;
-import main.java.service.MemberService.MemberDetail;
-import main.java.service.MemberService.MemberStatistics;
-import main.java.service.MemberService.ServiceResult;
-import main.utils.DateUtils;
+import service.MemberService;
+import service.MemberService.MemberDetail;
+import service.MemberService.MemberStatistics;
+import service.MemberService.ServiceResult;
+import utils.DateUtils;
 
 import java.util.List;
 import java.util.Map;

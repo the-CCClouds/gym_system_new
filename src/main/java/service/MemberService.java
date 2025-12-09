@@ -1,13 +1,13 @@
-package main.java.service;
+package service;
 
-import main.java.dao.MemberDAO;
-import main.java.dao.MembershipCardDAO;
-import main.java.dao.BookingDAO;
-import main.java.dao.CheckInDAO;
-import main.java.dao.OrderDAO;
-import main.java.entity.Member;
-import main.java.entity.MembershipCard;
-import main.utils.DateUtils;
+import dao.MemberDAO;
+import dao.MembershipCardDAO;
+import dao.BookingDAO;
+import dao.CheckInDAO;
+import dao.OrderDAO;
+import entity.Member;
+import entity.MembershipCard;
+import utils.DateUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -332,7 +332,7 @@ public class MemberService {
         // 检查是否有待处理的预约
         int[] bookingStats = bookingDAO.getMemberBookingStats(memberId);
         // bookingStats[0] = 总预约数, 需要检查是否有pending状态的预约
-        List<main.java.entity.Booking> pendingBookings = bookingDAO.getBookingsByMemberId(memberId);
+        List<entity.Booking> pendingBookings = bookingDAO.getBookingsByMemberId(memberId);
         long pendingCount = pendingBookings.stream()
                 .filter(b -> BookingDAO.STATUS_PENDING.equals(b.getBookingStatus()) ||
                             BookingDAO.STATUS_CONFIRMED.equals(b.getBookingStatus()))
@@ -368,17 +368,17 @@ public class MemberService {
                 return ServiceResult.failure("操作失败：会员有" + cards.size() + "张会员卡记录，无法删除");
             }
 
-            List<main.java.entity.Booking> bookings = bookingDAO.getBookingsByMemberId(memberId);
+            List<entity.Booking> bookings = bookingDAO.getBookingsByMemberId(memberId);
             if (!bookings.isEmpty()) {
                 return ServiceResult.failure("操作失败：会员有" + bookings.size() + "条预约记录，无法删除");
             }
 
-            List<main.java.entity.CheckIn> checkIns = checkInDAO.getCheckInsByMemberId(memberId);
+            List<entity.CheckIn> checkIns = checkInDAO.getCheckInsByMemberId(memberId);
             if (!checkIns.isEmpty()) {
                 return ServiceResult.failure("操作失败：会员有" + checkIns.size() + "条签到记录，无法删除");
             }
 
-            List<main.java.entity.Order> orders = orderDAO.getOrdersByMemberId(memberId);
+            List<entity.Order> orders = orderDAO.getOrdersByMemberId(memberId);
             if (!orders.isEmpty()) {
                 return ServiceResult.failure("操作失败：会员有" + orders.size() + "条订单记录，无法删除");
             }

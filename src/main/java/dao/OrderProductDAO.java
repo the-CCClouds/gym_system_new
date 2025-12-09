@@ -1,10 +1,13 @@
-package main.java.dao;
+package dao;
 
-import main.java.entity.OrderProduct;
-import main.java.entity.Product;
-import main.utils.DBUtil;
+import entity.OrderProduct;
+import entity.Product;
+import utils.DBUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,10 +17,10 @@ import java.util.List;
  */
 public class OrderProductDAO {
 
-    private ProductDAO productDAO;
+    private dao.ProductDAO productDAO;
 
     public OrderProductDAO() {
-        this.productDAO = new ProductDAO();
+        this.productDAO = new dao.ProductDAO();
     }
 
     /**

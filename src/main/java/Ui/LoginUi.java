@@ -1,6 +1,6 @@
 package Ui;
 
-import main.java.service.UserService;
+import service.UserService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -23,7 +23,7 @@ public class LoginUi extends JFrame implements MouseListener {
     JPasswordField passwordJTextField = new JPasswordField();
 
     //创建验证码
-    String gennerate= main.utils.LoginUtils.generateVerificationCode();
+    String gennerate= utils.LoginUtils.generateVerificationCode();
     JLabel gennerateJlabel = new JLabel(gennerate);
     JLabel codeTextLabel = new JLabel("验证码"); // 稍微加个提示字或者图标
 
@@ -135,7 +135,7 @@ public class LoginUi extends JFrame implements MouseListener {
     public void mouseReleased(MouseEvent e) {
 
         if (e.getSource() == gennerateJlabel) {
-            gennerate = main.utils.LoginUtils.generateVerificationCode();
+            gennerate = utils.LoginUtils.generateVerificationCode();
             gennerateJlabel.setText(gennerate);
         }
 
@@ -148,7 +148,7 @@ public class LoginUi extends JFrame implements MouseListener {
                 JOptionPane.showMessageDialog(this, "验证码错误！");
                 userJTextField.setText("");
                 passwordJTextField.setText("");
-                gennerate= main.utils.LoginUtils.generateVerificationCode();
+                gennerate= utils.LoginUtils.generateVerificationCode();
                 gennerateJlabel.setText(gennerate);
                 codeJTextField.setText("");
                 return;
@@ -167,7 +167,7 @@ public class LoginUi extends JFrame implements MouseListener {
                 JOptionPane.showMessageDialog(this, "用户名或密码错误！", "登录失败",JOptionPane.ERROR_MESSAGE);
                 userJTextField.setText("");
                 passwordJTextField.setText("");
-                gennerate= main.utils.LoginUtils.generateVerificationCode();
+                gennerate= utils.LoginUtils.generateVerificationCode();
                 gennerateJlabel.setText(gennerate);
                 codeJTextField.setText("");
             }

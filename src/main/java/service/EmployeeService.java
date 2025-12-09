@@ -1,13 +1,13 @@
-package main.java.service;
+package service;
 
-import main.java.dao.EmployeeDAO;
-import main.java.dao.EmployeeRoleDAO;
-import main.java.dao.CourseDAO;
-import main.java.dao.BookingDAO;
-import main.java.entity.Course;
-import main.java.entity.Employee;
-import main.java.entity.EmployeeRole;
-import main.utils.DateUtils;
+import dao.EmployeeDAO;
+import dao.EmployeeRoleDAO;
+import dao.CourseDAO;
+import dao.BookingDAO;
+import entity.Course;
+import entity.Employee;
+import entity.EmployeeRole;
+import utils.DateUtils;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -731,7 +731,7 @@ public class EmployeeService {
      * @param trainerId 教练ID
      * @return 预约列表
      */
-    public List<main.java.entity.Booking> getTrainerBookings(int trainerId) {
+    public List<entity.Booking> getTrainerBookings(int trainerId) {
         return bookingDAO.getBookingsByTrainerId(trainerId);
     }
 
@@ -741,7 +741,7 @@ public class EmployeeService {
      * @param trainerId 教练ID
      * @return 今日预约列表
      */
-    public List<main.java.entity.Booking> getTrainerTodayBookings(int trainerId) {
+    public List<entity.Booking> getTrainerTodayBookings(int trainerId) {
         return bookingDAO.getTodayBookingsByTrainerId(trainerId);
     }
 

@@ -1,10 +1,6 @@
 import Ui.LoginUi;
-// 引入更多的主题包
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.themes.FlatMacLightLaf; // Mac 风格 (亮)
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;  // Mac 风格 (暗)
-
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import utils.DBUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -54,7 +50,7 @@ public class Main {
         // 后台连接数据库
         new Thread(() -> {
             try {
-                main.utils.DBUtil.getConnection();
+                DBUtil.getConnection();
             } catch (Exception e) {
                 e.printStackTrace();
             }

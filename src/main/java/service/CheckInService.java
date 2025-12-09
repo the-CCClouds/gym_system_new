@@ -1,11 +1,11 @@
 package service;
 
-import main.java.dao.CheckInDAO;
-import main.java.dao.MemberDAO;
-import main.java.dao.MembershipCardDAO;
-import main.java.entity.CheckIn;
-import main.java.entity.Member;
-import main.utils.DateUtils;
+import dao.CheckInDAO;
+import dao.MemberDAO;
+import dao.MembershipCardDAO;
+import entity.CheckIn;
+import entity.Member;
+import utils.DateUtils;
 
 import java.util.Date;
 import java.util.List;

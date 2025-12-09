@@ -1,4 +1,4 @@
-package main.java.entity;
+package entity;
 
 /**
  * 员工角色实体类：体现继承关系
