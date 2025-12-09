@@ -1,279 +1,191 @@
 package Ui;
 
+import entity.CheckIn;
 import entity.Member;
-import service.MemberService;
-import service.MemberService.MemberDetail;
 import service.CheckInService;
+import service.MemberService; // 引入 MemberService
+import service.ServiceResult;
+import utils.StyleUtils;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
 public class CheckInUi extends JFrame {
 
-    private MemberService memberService;
     private CheckInService checkInService;
+    private MemberService memberService; // 新增：用于搜索
 
-    // 当前操作的会员
-    private Member currentMember;
-    private boolean isCheckedIn = false;
-
-    // 组件
-    private JTextField searchField;
-    private JLabel infoLabel;
-    private JLabel statusLabel;
-    private JButton actionBtn; // 签到/签退按钮动态变化
+    private JTextField inputField;
+    private JTextArea resultArea;
 
     public CheckInUi() {
-        this.memberService = new MemberService();
         this.checkInService = new CheckInService();
+        this.memberService = new MemberService(); // 初始化
 
-        this.setTitle("前台门禁签到系统");
-        this.setSize(650, 500);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.getContentPane().setLayout(null);
+        StyleUtils.initGlobalTheme();
+
+        setTitle("✅ 会员进场签到");
+        setSize(600, 480); // 稍微高一点，防止遮挡
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(null);
 
         initView();
-        this.setVisible(true);
+        setVisible(true);
     }
 
     private void initView() {
-        // 1. 顶部查询区
-        JLabel searchLabel = new JLabel("会员搜索:");
-        searchLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        searchLabel.setBounds(40, 30, 80, 30);
-        this.getContentPane().add(searchLabel);
+        // 标题区
+        JLabel iconLbl = new JLabel("👋", SwingConstants.CENTER);
+        iconLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 60));
+        iconLbl.setBounds(0, 30, 600, 70);
+        add(iconLbl);
 
-        searchField = new JTextField();
-        searchField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        searchField.setToolTipText("输入姓名或手机号");
-        searchField.setBounds(130, 30, 250, 35);
-        // 回车触发查询
-        searchField.addActionListener(e -> performQuery());
-        this.getContentPane().add(searchField);
+        JLabel titleLbl = new JLabel("会员进场签到", SwingConstants.CENTER);
+        titleLbl.setFont(StyleUtils.FONT_TITLE_BIG);
+        titleLbl.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        titleLbl.setBounds(0, 100, 600, 40);
+        add(titleLbl);
 
-        JButton queryBtn = new JButton("查询");
-        queryBtn.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        queryBtn.setBounds(400, 30, 100, 35);
-        queryBtn.setBackground(new Color(100, 150, 250)); // 蓝色按钮
-        queryBtn.setForeground(Color.WHITE);
-        queryBtn.addActionListener(e -> performQuery());
-        this.getContentPane().add(queryBtn);
+        // 输入区 (居中大框)
+        JLabel tipLbl = new JLabel("支持输入：会员ID / 姓名 / 手机号", SwingConstants.CENTER);
+        tipLbl.setFont(StyleUtils.FONT_NORMAL);
+        tipLbl.setForeground(StyleUtils.COLOR_INFO);
+        tipLbl.setBounds(0, 160, 600, 20);
+        add(tipLbl);
 
-        // 分割线
-        JSeparator sep = new JSeparator();
-        sep.setBounds(30, 85, 580, 10);
-        this.getContentPane().add(sep);
+        inputField = new JTextField();
+        inputField.setBounds(150, 190, 300, 50); // 大输入框
+        inputField.setFont(new Font("Arial", Font.BOLD, 20));
+        inputField.setHorizontalAlignment(SwingConstants.CENTER);
+        StyleUtils.styleTextField(inputField);
 
-        // 2. 会员信息展示卡片
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(null);
-        infoPanel.setBounds(40, 100, 550, 220);
-        infoPanel.setBackground(Color.WHITE);
-        infoPanel.setBorder(BorderFactory.createEtchedBorder());
-        this.getContentPane().add(infoPanel);
-
-        // 信息文本
-        infoLabel = new JLabel("<html><div style='text-align: center; margin-top: 60px; color: gray;'>请先输入关键词查询会员</div></html>");
-        infoLabel.setFont(new Font("微软雅黑", Font.PLAIN, 16));
-        infoLabel.setBounds(20, 20, 510, 120);
-        infoLabel.setVerticalAlignment(SwingConstants.TOP);
-        infoPanel.add(infoLabel);
-
-        // 状态栏 (在卡片底部)
-        statusLabel = new JLabel("");
-        statusLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
-        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        statusLabel.setBounds(20, 160, 510, 40);
-        infoPanel.add(statusLabel);
-
-        // 3. 底部操作按钮 (默认不可用)
-        actionBtn = new JButton("等待查询...");
-        actionBtn.setFont(new Font("微软雅黑", Font.BOLD, 22));
-        actionBtn.setBounds(175, 360, 300, 60);
-        actionBtn.setEnabled(false);
-        actionBtn.addActionListener(e -> performAction());
-        this.getContentPane().add(actionBtn);
-
-        // 背景
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 650, 500);
-        bg.setBackground(new Color(240, 245, 248));
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
-    }
-
-    // 查询会员信息 (支持模糊搜索)
-    private void performQuery() {
-        String keyword = searchField.getText().trim();
-        if (keyword.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "请输入查询关键字 (姓名或手机号)");
-            return;
-        }
-
-        // 调用 Service 的综合搜索
-        java.util.List<Member> results = memberService.search(keyword);
-
-        if (results.isEmpty()) {
-            resetInfoPanel("<html><div style='text-align: center; color: red; margin-top: 50px;'>未找到匹配的会员<br/>请检查输入是否正确</div></html>");
-            return;
-        }
-
-        // 处理结果
-        if (results.size() == 1) {
-            selectMember(results.get(0));
-        } else {
-            // 多个结果，弹窗让选
-            showSelectionDialog(results);
-        }
-    }
-
-    // 多选一弹窗
-    private void showSelectionDialog(List<Member> members) {
-        JDialog dialog = new JDialog(this, "查询到多位会员，请选择", true);
-        dialog.setSize(500, 300);
-        dialog.setLocationRelativeTo(this);
-
-        String[] columns = {"ID", "姓名", "手机号", "性别"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) { return false; }
-        };
-
-        for (Member m : members) {
-            model.addRow(new Object[]{m.getId(), m.getName(), m.getPhone(), "male".equals(m.getGender())?"男":"女"});
-        }
-
-        JTable table = new JTable(model);
-        table.setRowHeight(25);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        // 双击事件
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    confirmSelection(table, members, dialog);
-                }
+        // 回车直接签到
+        inputField.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) performCheckIn();
             }
         });
+        add(inputField);
 
-        JButton confirmBtn = new JButton("确定");
-        confirmBtn.addActionListener(e -> confirmSelection(table, members, dialog));
+        JButton checkBtn = new JButton("搜索并签到");
+        StyleUtils.styleButton(checkBtn, StyleUtils.COLOR_PRIMARY);
+        checkBtn.setFont(new Font("微软雅黑", Font.BOLD, 16));
+        checkBtn.setBounds(150, 255, 300, 45);
+        checkBtn.addActionListener(e -> performCheckIn());
+        add(checkBtn);
 
-        dialog.setLayout(new BorderLayout());
-        dialog.add(new JScrollPane(table), BorderLayout.CENTER);
-        JPanel p = new JPanel(); p.add(confirmBtn);
-        dialog.add(p, BorderLayout.SOUTH);
-        dialog.setVisible(true);
+        // 结果反馈区
+        resultArea = new JTextArea();
+        resultArea.setEditable(false);
+        resultArea.setFont(StyleUtils.FONT_NORMAL);
+        resultArea.setBackground(new Color(245, 247, 250));
+        resultArea.setForeground(StyleUtils.COLOR_INFO);
+        // 自动换行
+        resultArea.setLineWrap(true);
+        resultArea.setWrapStyleWord(true);
+
+        JScrollPane scroll = new JScrollPane(resultArea);
+        scroll.setBounds(50, 330, 500, 80); // 加高一点
+        scroll.setBorder(BorderFactory.createTitledBorder("操作日志"));
+        add(scroll);
     }
 
-    private void confirmSelection(JTable table, List<Member> members, JDialog dialog) {
-        int row = table.getSelectedRow();
-        if (row != -1) {
-            selectMember(members.get(row));
-            dialog.dispose();
+    // 核心逻辑：智能搜索 + 签到
+    private void performCheckIn() {
+        String text = inputField.getText().trim();
+        if (text.isEmpty()) {
+            showMsg("⚠️ 请输入会员信息", false);
+            return;
         }
-    }
 
-    // 选中会员，更新界面
-    private void selectMember(Member member) {
-        this.currentMember = member;
+        // 1. 调用 MemberService 进行综合搜索 (ID/名字/手机)
+        // 你的 MemberService.search 方法已经实现了这个逻辑
+        List<Member> list = memberService.search(text);
 
-        // 获取详细信息
-        MemberDetail detail = memberService.getMemberDetail(member.getId());
-
-        // 构建 HTML 显示
-        StringBuilder sb = new StringBuilder("<html><div style='padding: 10px;'>");
-        sb.append("<span style='font-size: 14px;'>会员ID: ").append(member.getId()).append("</span><br/>");
-        sb.append("<span style='font-size: 18px; font-weight: bold;'>姓名: ").append(member.getName()).append("</span>&nbsp;&nbsp;");
-        sb.append("<span style='font-size: 14px;'>手机: ").append(member.getPhone()).append("</span><br/><br/>");
-
-        // 账号状态
-        String statusColor = "active".equals(member.getStatus()) ? "green" : "red";
-        String statusText = "active".equals(member.getStatus()) ? "正常" : ("frozen".equals(member.getStatus()) ? "已冻结" : "已停用");
-        sb.append("账号状态: <font color='").append(statusColor).append("'>").append(statusText).append("</font><br/>");
-
-        // 会员卡状态
-        if (detail.isHasValidCard()) {
-            sb.append("会员卡: <font color='green'>有效 (").append(detail.getActiveCard().getCardType()).append(")</font>");
-            sb.append(" 剩余 ").append(detail.getCardRemainingDays()).append(" 天");
-        } else {
-            sb.append("会员卡: <font color='red'>无效 / 已过期</font>");
+        if (list.isEmpty()) {
+            showMsg("❌ 未找到会员：[" + text + "]", false);
+            inputField.selectAll();
+            return;
         }
-        sb.append("</div></html>");
 
-        infoLabel.setText(sb.toString());
+        // 2. 判断搜索结果
+        Member targetMember = null;
 
-        // 判断当前是在馆还是离馆
-        isCheckedIn = detail.isCurrentlyCheckedIn();
-        updateActionButton(detail, member.getStatus());
-    }
-
-    private void updateActionButton(MemberDetail detail, String status) {
-        if (isCheckedIn) {
-            // 已在馆 -> 显示签退
-            statusLabel.setText("当前状态：【 在馆中 (In Gym) 】");
-            statusLabel.setForeground(new Color(34, 139, 34)); // 深绿
-
-            actionBtn.setText("签退 (Check Out)");
-            actionBtn.setBackground(new Color(255, 100, 100)); // 红色
-            actionBtn.setEnabled(true);
+        if (list.size() == 1) {
+            // 只有一个匹配，直接锁定
+            targetMember = list.get(0);
         } else {
-            // 不在馆 -> 显示签到
-            statusLabel.setText("当前状态：【 不在馆 (Out) 】");
-            statusLabel.setForeground(Color.GRAY);
+            // 找到多个 (比如重名)，弹窗让前台选
+            MemberItem[] options = new MemberItem[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                options[i] = new MemberItem(list.get(i));
+            }
 
-            // 只有卡有效 且 账号正常 才能签到
-            boolean canCheckIn = detail.isHasValidCard() && "active".equals(status);
+            MemberItem selected = (MemberItem) JOptionPane.showInputDialog(
+                    this,
+                    "找到 " + list.size() + " 位匹配会员，请选择：",
+                    "多重匹配确认",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+            );
 
-            if (canCheckIn) {
-                actionBtn.setText("签到 (Check In)");
-                actionBtn.setBackground(new Color(60, 179, 113)); // 绿色
-                actionBtn.setEnabled(true);
+            if (selected != null) {
+                targetMember = selected.member;
             } else {
-                actionBtn.setText("禁止入场 (卡无效或冻结)");
-                actionBtn.setBackground(Color.GRAY);
-                actionBtn.setEnabled(false);
+                showMsg("⚠️ 操作已取消", false); // 用户关掉了弹窗
+                return;
             }
         }
-    }
 
-    private void resetInfoPanel(String msg) {
-        currentMember = null;
-        infoLabel.setText(msg);
-        statusLabel.setText("");
-        actionBtn.setEnabled(false);
-        actionBtn.setText("等待查询...");
-        actionBtn.setBackground(null);
-    }
+        // 3. 执行签到 (使用锁定的 ID)
+        if (targetMember != null) {
+            CheckInService.ServiceResult<CheckIn> result = checkInService.checkIn(targetMember.getId());
 
-    // 执行操作
-    private void performAction() {
-        if (currentMember == null) return;
-
-        if (isCheckedIn) {
-            // 签退
-            CheckInService.ServiceResult result = checkInService.checkOut(currentMember.getId());
             if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "签退成功！\n再见，" + currentMember.getName());
-                selectMember(currentMember); // 刷新
+                showMsg("✅ [" + targetMember.getName() + "] " + result.getMessage(), true);
+                inputField.setText(""); // 成功后清空，方便下一个
+                inputField.requestFocus();
             } else {
-                JOptionPane.showMessageDialog(this, "签退失败：" + result.getMessage());
+                showMsg("❌ [" + targetMember.getName() + "] 签到失败：" + result.getMessage(), false);
+                inputField.selectAll();
             }
+        }
+    }
+
+    private void showMsg(String msg, boolean success) {
+        // 在底部追加日志，而不是覆盖，方便看历史
+        String time = utils.DateUtils.formatDateTime(new java.util.Date()); // 假设你有这个工具方法，或者用 new Date().toString()
+        // 简单起见，这里手动拼个时间
+        String log = String.format("[%tT] %s\n", System.currentTimeMillis(), msg);
+
+        resultArea.append(log);
+        // 滚动到底部
+        resultArea.setCaretPosition(resultArea.getDocument().getLength());
+
+        // 也可以同时改变字体颜色提示当前状态(虽然TextArea只能单色，这里作为整体提示)
+        if (!success) {
+            // 如果失败，可以弹个声音或者把输入框变红一下
+            inputField.setBackground(new Color(255, 235, 235));
         } else {
-            // 签到
-            CheckInService.ServiceResult result = checkInService.checkIn(currentMember.getId());
-            if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "签到成功！\n欢迎光临，" + currentMember.getName());
-                selectMember(currentMember); // 刷新
-            } else {
-                JOptionPane.showMessageDialog(this, "签到失败：" + result.getMessage());
-            }
+            inputField.setBackground(Color.WHITE);
+        }
+    }
+
+    // 内部类：用于下拉框显示 (让名字更好看)
+    private static class MemberItem {
+        Member member;
+        public MemberItem(Member m) { this.member = m; }
+        @Override
+        public String toString() {
+            // 显示格式：张三 (ID:1001 | 13800000000)
+            return member.getName() + " (ID:" + member.getId() + " | " + member.getPhone() + ")";
         }
     }
 }

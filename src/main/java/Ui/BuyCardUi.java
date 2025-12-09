@@ -3,141 +3,153 @@ package Ui;
 import dao.MembershipCardDAO;
 import entity.Member;
 import service.MemberService;
-import service.MemberService.MemberDetail;
+import service.ServiceResult;
+import utils.StyleUtils;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class BuyCardUi extends JFrame {
 
     private Member member;
     private MemberService memberService;
 
+    // 选中的卡类型
+    private int selectedType = -1;
+    private JPanel monthlyPanel;
+    private JPanel yearlyPanel;
+
     public BuyCardUi(Member member) {
         this.member = member;
         this.memberService = new MemberService();
 
-        this.setTitle("会员卡中心 - " + member.getName());
-        this.setSize(500, 400);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.getContentPane().setLayout(null);
+        StyleUtils.initGlobalTheme();
+        setTitle("💳 办理会员卡");
+        setSize(700, 500);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(null);
 
         initView();
-
-        this.setVisible(true);
+        setVisible(true);
     }
 
     private void initView() {
-        // 1. 顶部标题
-        JLabel titleLabel = new JLabel("购买/续费会员卡");
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 20));
-        titleLabel.setBounds(160, 20, 200, 30);
-        this.getContentPane().add(titleLabel);
+        // 标题
+        JLabel titleLbl = new JLabel("选择您的会员方案", SwingConstants.CENTER);
+        titleLbl.setFont(StyleUtils.FONT_TITLE_BIG);
+        titleLbl.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        titleLbl.setBounds(0, 30, 700, 40);
+        add(titleLbl);
 
-        // 2. 显示当前状态
-        // 获取详情以查看是否有卡
-        MemberDetail detail = memberService.getMemberDetail(member.getId());
-        boolean hasCard = detail.isHasValidCard();
+        JLabel subLbl = new JLabel("为 [" + member.getName() + "] 办理开卡业务", SwingConstants.CENTER);
+        subLbl.setFont(StyleUtils.FONT_NORMAL);
+        subLbl.setForeground(StyleUtils.COLOR_INFO);
+        subLbl.setBounds(0, 70, 700, 20);
+        add(subLbl);
 
-        String statusText = hasCard ? "当前状态：已拥有有效会员卡" : "当前状态：暂无有效会员卡";
-        Color statusColor = hasCard ? new Color(50, 150, 50) : Color.RED;
+        // === 卡片区域 ===
+        int cardY = 120;
+        int cardW = 240;
+        int cardH = 260;
+        int gap = 60;
+        int startX = (700 - (cardW * 2 + gap)) / 2;
 
-        JLabel statusLabel = new JLabel(statusText);
-        statusLabel.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        statusLabel.setForeground(statusColor);
-        statusLabel.setBounds(50, 70, 400, 30);
-        this.getContentPane().add(statusLabel);
+        // 月卡卡片
+        monthlyPanel = createCardPanel("月卡 (Monthly)", "¥ 200", "🗓️ 有效期 30 天", "⭐ 适合短期体验", startX, cardY, cardW, cardH);
+        monthlyPanel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) { selectCard(MembershipCardDAO.TYPE_MONTHLY); }
+        });
+        add(monthlyPanel);
 
-        if (hasCard && detail.getActiveCard() != null) {
-            JLabel expireLabel = new JLabel("有效期至：" + detail.getActiveCard().getEndDate());
-            expireLabel.setBounds(50, 100, 400, 20);
-            this.getContentPane().add(expireLabel);
-        }
+        // 年卡卡片
+        yearlyPanel = createCardPanel("年卡 (Yearly)", "¥ 1200", "🗓️ 有效期 365 天", "🔥 超值！每天仅需 3 元", startX + cardW + gap, cardY, cardW, cardH);
+        yearlyPanel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) { selectCard(MembershipCardDAO.TYPE_YEARLY); }
+        });
+        add(yearlyPanel);
 
-        // 3. 购买区域面板
-        JPanel buyPanel = new JPanel();
-        buyPanel.setLayout(null);
-        buyPanel.setBounds(30, 140, 420, 180);
-        buyPanel.setBackground(Color.WHITE);
-        buyPanel.setBorder(BorderFactory.createEtchedBorder());
-        this.getContentPane().add(buyPanel);
-
-        // --- 月卡选项 ---
-        JLabel monthTitle = new JLabel("月卡 (Monthly)");
-        monthTitle.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        monthTitle.setBounds(20, 20, 120, 30);
-        buyPanel.add(monthTitle);
-
-        JLabel monthDesc = new JLabel("有效期30天，适合短期健身");
-        monthDesc.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        monthDesc.setForeground(Color.GRAY);
-        monthDesc.setBounds(20, 50, 200, 20);
-        buyPanel.add(monthDesc);
-
-        JButton buyMonthBtn = new JButton("购买月卡");
-        buyMonthBtn.setBounds(280, 25, 100, 40);
-        buyMonthBtn.addActionListener(e -> performBuy(MembershipCardDAO.TYPE_MONTHLY, "月卡"));
-        buyPanel.add(buyMonthBtn);
-
-        // 分割线
-        JSeparator sep = new JSeparator();
-        sep.setBounds(10, 90, 400, 10);
-        buyPanel.add(sep);
-
-        // --- 年卡选项 ---
-        JLabel yearTitle = new JLabel("年卡 (Yearly)");
-        yearTitle.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        yearTitle.setForeground(new Color(200, 100, 0)); // 金色/橙色
-        yearTitle.setBounds(20, 110, 120, 30);
-        buyPanel.add(yearTitle);
-
-        JLabel yearDesc = new JLabel("有效期365天，超值优惠");
-        yearDesc.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        yearDesc.setForeground(Color.GRAY);
-        yearDesc.setBounds(20, 140, 200, 20);
-        buyPanel.add(yearDesc);
-
-        JButton buyYearBtn = new JButton("购买年卡");
-        buyYearBtn.setBounds(280, 115, 100, 40);
-        buyYearBtn.setBackground(new Color(255, 240, 200)); // 淡金色背景
-        buyYearBtn.addActionListener(e -> performBuy(MembershipCardDAO.TYPE_YEARLY, "年卡"));
-        buyPanel.add(buyYearBtn);
-
-        // 背景
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 500, 400);
-        bg.setBackground(new Color(240, 248, 255));
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
+        // 底部按钮
+        JButton confirmBtn = new JButton("立即开通");
+        StyleUtils.styleButton(confirmBtn, StyleUtils.COLOR_PRIMARY);
+        confirmBtn.setBounds(250, 410, 200, 45);
+        confirmBtn.addActionListener(e -> performBuy());
+        add(confirmBtn);
     }
 
-    private void performBuy(int cardType, String cardName) {
-        double price = 0.0;
-        if (cardType == dao.MembershipCardDAO.TYPE_MONTHLY) {
-            price = MembershipCardDAO.PRICE_MONTHLY;  // 月卡价格
-        } else if (cardType == dao.MembershipCardDAO.TYPE_YEARLY) {
-            price = MembershipCardDAO.PRICE_YEARLY; // 年卡价格
+    // 辅助：创建卡片面板
+    private JPanel createCardPanel(String title, String price, String desc1, String desc2, int x, int y, int w, int h) {
+        JPanel p = new JPanel(null);
+        p.setBounds(x, y, w, h);
+        p.setBackground(Color.WHITE);
+        p.setBorder(new LineBorder(new Color(220, 220, 220), 1));
+        p.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JLabel tLbl = new JLabel(title, SwingConstants.CENTER);
+        tLbl.setFont(StyleUtils.FONT_TITLE);
+        tLbl.setBounds(0, 20, w, 30);
+        p.add(tLbl);
+
+        JLabel pLbl = new JLabel(price, SwingConstants.CENTER);
+        pLbl.setFont(new Font("Arial", Font.BOLD, 36));
+        pLbl.setForeground(StyleUtils.COLOR_DANGER);
+        pLbl.setBounds(0, 60, w, 50);
+        p.add(pLbl);
+
+        JLabel d1 = new JLabel(desc1, SwingConstants.CENTER);
+        d1.setFont(StyleUtils.FONT_NORMAL);
+        d1.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        d1.setBounds(0, 130, w, 20);
+        p.add(d1);
+
+        JLabel d2 = new JLabel(desc2, SwingConstants.CENTER);
+        d2.setFont(StyleUtils.FONT_NORMAL);
+        d2.setForeground(StyleUtils.COLOR_WARNING);
+        d2.setBounds(0, 160, w, 20);
+        p.add(d2);
+
+        return p;
+    }
+
+    // 选中逻辑：改变边框颜色
+    private void selectCard(int type) {
+        selectedType = type;
+        // 重置边框
+        monthlyPanel.setBorder(new LineBorder(new Color(220, 220, 220), 1));
+        yearlyPanel.setBorder(new LineBorder(new Color(220, 220, 220), 1));
+
+        // 高亮选中
+        if (type == MembershipCardDAO.TYPE_MONTHLY) {
+            monthlyPanel.setBorder(new LineBorder(StyleUtils.COLOR_PRIMARY, 3));
+        } else {
+            yearlyPanel.setBorder(new LineBorder(StyleUtils.COLOR_PRIMARY, 3));
+        }
+    }
+
+    private void performBuy() {
+        if (selectedType == -1) {
+            JOptionPane.showMessageDialog(this, "请先点击选择一种会员卡！");
+            return;
         }
 
-        // 2. 弹窗提示时，把价格也显示出来，更专业
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "确定要购买 " + cardName + " 吗？\n" +
-                        "应付金额：¥" + price + "\n" +
-                        "(模拟支付：现金/扫码已收款)",
-                "确认购买", JOptionPane.YES_NO_OPTION);
+        double price = (selectedType == MembershipCardDAO.TYPE_MONTHLY) ? 200.0 : 1200.0;
+        String name = (selectedType == MembershipCardDAO.TYPE_MONTHLY) ? "月卡" : "年卡";
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        int opt = JOptionPane.showConfirmDialog(this,
+                "确认开通 [" + name + "] ?\n需支付现金：¥ " + price, "支付确认", JOptionPane.YES_NO_OPTION);
 
-            // 3. 【关键修改】调用带 price 参数的新方法
-            service.MemberService.ServiceResult<Void> result = memberService.buyCard(member.getId(), cardType, price);
+        if (opt == JOptionPane.YES_OPTION) {
 
-            if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "✅ 支付成功！\n" + result.getMessage());
-                this.dispose(); // 关闭当前窗口
-                // 可选：如果需要刷新状态，可以重新加载
+            MemberService.ServiceResult<Void> res = memberService.buyCard(member.getId(), selectedType);
+            if (res.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "✅ 开卡成功！");
+                dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "❌ " + result.getMessage(), "购买失败", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "❌ 失败：" + res.getMessage());
             }
         }
     }

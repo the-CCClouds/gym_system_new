@@ -4,296 +4,296 @@ import com.toedter.calendar.JDateChooser;
 import entity.Member;
 import service.MemberService;
 import service.UserService;
+import service.ServiceResult; // 确保导入
+import utils.LoginUtils;
+import utils.StyleUtils; // 引入样式工具类
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.Date;
 
+public class RegisterUi extends JFrame {
 
-public class RegisterUi extends JFrame implements MouseListener {
-    private JTextField usernameField;
-    private JPasswordField passwordField;
-    private JRadioButton adminRadio;
-    private JRadioButton memberRadio;
-    private UserService userService;
+    // 输入组件
+    private JTextField userField;
+    private JPasswordField passField;
+    private JPasswordField confirmPassField;
+    private JTextField phoneField;
+    private JTextField emailField;
+    private JComboBox<String> genderBox;
+    private JDateChooser birthdayChooser;
+    private JTextField codeField;
+    private JLabel codeImageLbl; // 显示验证码文本
 
-    //创建注册的按钮
-    JButton register = new JButton("注册");
-
-    //创建用户名输入
-    JTextField userJTextField = new JTextField();
-
-    //创建密码输入
-    JPasswordField passwordJTextField = new JPasswordField();
-
-    // >>> 新增：确认密码输入 <<<
-    JPasswordField confirmPasswordJTextField = new JPasswordField();
-
-    //创建手机号输入
-    JTextField phoneJTextField = new JTextField();
-
-    //创建邮箱输入
-    JTextField emailJTextField = new JTextField();
-
-    //创建性别输入
-    JComboBox<String> genderComboBox = new JComboBox<>(new String[]{"男", "女"});
-
-    //创建验证码
-    String generate = utils.LoginUtils.generateVerificationCode();
-    JLabel generateJlabel = new JLabel(generate);
-    JLabel codeTextLabel = new JLabel("验证码"); // 稍微加个提示字或者图标
-
-    JDateChooser birthdayChooser = new JDateChooser();
-
-
-
-
-    // 【新增】创建验证码输入框 (用户填这里)
-    JTextField codeJTextField = new JTextField();
+    // 验证码数据
+    private String currentCode;
 
     public void RegisterJFrame() {
-        //在创建登录界面的时候,创建
+        // 1. 初始化主题
+        StyleUtils.initGlobalTheme();
 
-        this.setSize(500, 600);
-
-
-        //设置界面标题
-        this.setTitle("健身系统注册页面");
-
-        //设置界面居中
-
-
+        this.setSize(550, 750); // 注册项多，窗口高一点
+        this.setTitle("💪 健身房管理系统 - 新用户注册");
         this.setLocationRelativeTo(null);
-
-        //设置空布局
-        this.getContentPane().setLayout(null);
-
-
-        components();
-        //设置游戏的关闭模式
-        //关闭一个页面就关闭所有页面
-
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setLayout(null);
+        this.getContentPane().setBackground(StyleUtils.COLOR_BG); // 淡灰背景
+
+        initView();
+        refreshCode(); // 初始化验证码
 
         this.setVisible(true);
-
     }
 
-    public void components() {
-            int leftMargin = 100;
-            int labelWidth = 80;
-            int fieldWidth = 220;
-            int fieldHeight = 30;
-            int verticalGap = 45;
-            int startY = 50;
+    private void initView() {
+        // === 1. 顶部标题区 ===
+        JPanel headerPanel = new JPanel(null);
+        headerPanel.setBounds(0, 0, 550, 80);
+        headerPanel.setBackground(Color.WHITE);
+        this.add(headerPanel);
+
+        JLabel titleLbl = new JLabel("📝 注册新账号");
+        titleLbl.setFont(StyleUtils.FONT_TITLE_BIG);
+        titleLbl.setForeground(StyleUtils.COLOR_PRIMARY);
+        titleLbl.setBounds(40, 20, 300, 40);
+        headerPanel.add(titleLbl);
+
+        JLabel subLbl = new JLabel("加入我们，开启健康生活");
+        subLbl.setFont(StyleUtils.FONT_NORMAL);
+        subLbl.setForeground(StyleUtils.COLOR_INFO);
+        subLbl.setBounds(45, 55, 300, 20);
+        headerPanel.add(subLbl);
+
+        // === 2. 表单区域 (白色卡片风格) ===
+        JPanel formPanel = new JPanel(null);
+        formPanel.setBounds(40, 100, 455, 580);
+        formPanel.setBackground(Color.WHITE);
+        // 简单的阴影效果可以通过边框模拟，或者直接纯白背景
+        formPanel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+        this.add(formPanel);
+
+        int x = 40, y = 30;
+        int w = 375, h = 40; // 输入框高度
+        int gap = 65; // 垂直间距
+
+        // 用户名
+        addLabel(formPanel, "用户名", x, y);
+        userField = new JTextField();
+        userField.setBounds(x, y + 25, w, h);
+        StyleUtils.styleTextField(userField);
+        formPanel.add(userField);
 
         // 密码
-        JLabel passwordJlabel = new JLabel("密码");
-        passwordJlabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        passwordJlabel.setBounds(leftMargin, startY + verticalGap, labelWidth, fieldHeight);
-        this.getContentPane().add(passwordJlabel);
+        y += gap;
+        addLabel(formPanel, "登录密码", x, y);
+        passField = new JPasswordField();
+        passField.setBounds(x, y + 25, w, h);
+        StyleUtils.styleTextField(passField);
+        formPanel.add(passField);
 
-        passwordJTextField.setBounds(leftMargin + labelWidth, startY + verticalGap, fieldWidth, fieldHeight);
-        passwordJTextField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        this.getContentPane().add(passwordJTextField);
+        // 确认密码
+        y += gap;
+        addLabel(formPanel, "确认密码", x, y);
+        confirmPassField = new JPasswordField();
+        confirmPassField.setBounds(x, y + 25, w, h);
+        StyleUtils.styleTextField(confirmPassField);
+        formPanel.add(confirmPassField);
 
-        // >>> 新增：确认密码 <<<
-        JLabel confirmPasswordJlabel = new JLabel("确认密码");
-        confirmPasswordJlabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        confirmPasswordJlabel.setBounds(leftMargin, startY + verticalGap * 2, labelWidth, fieldHeight);
-        this.getContentPane().add(confirmPasswordJlabel);
+        // 手机号 (左) & 邮箱 (右) - 一行放两个显得紧凑
+        y += gap;
+        addLabel(formPanel, "手机号码", x, y);
+        phoneField = new JTextField();
+        phoneField.setBounds(x, y + 25, 175, h);
+        StyleUtils.styleTextField(phoneField);
+        formPanel.add(phoneField);
 
-        confirmPasswordJTextField.setBounds(leftMargin + labelWidth, startY + verticalGap * 2, fieldWidth, fieldHeight);
-        confirmPasswordJTextField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        this.getContentPane().add(confirmPasswordJTextField);
-        // >>> 新增结束 <<<
+        addLabel(formPanel, "电子邮箱", x + 200, y);
+        emailField = new JTextField();
+        emailField.setBounds(x + 200, y + 25, 175, h);
+        StyleUtils.styleTextField(emailField);
+        formPanel.add(emailField);
 
+        // 性别 & 生日
+        y += gap;
+        addLabel(formPanel, "性别", x, y);
+        genderBox = new JComboBox<>(new String[]{"男", "女"});
+        genderBox.setBounds(x, y + 25, 100, h);
+        genderBox.setFont(StyleUtils.FONT_NORMAL);
+        genderBox.setBackground(Color.WHITE);
+        formPanel.add(genderBox);
 
-        // 手机号 (原先是 verticalGap * 2，现在是 * 3)
-        JLabel phoneJlabel = new JLabel("手机号");
-        phoneJlabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        phoneJlabel.setBounds(leftMargin, startY + verticalGap * 3, labelWidth, fieldHeight);
-        this.getContentPane().add(phoneJlabel);
-
-        phoneJTextField.setBounds(leftMargin + labelWidth, startY + verticalGap * 3, fieldWidth, fieldHeight);
-        phoneJTextField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        this.getContentPane().add(phoneJTextField);
-
-        // 邮箱 (原先是 * 3，现在是 * 4)
-        JLabel emailJlabel = new JLabel("邮箱");
-        emailJlabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        emailJlabel.setBounds(leftMargin, startY + verticalGap * 4, labelWidth, fieldHeight);
-        this.getContentPane().add(emailJlabel);
-
-        emailJTextField.setBounds(leftMargin + labelWidth, startY + verticalGap * 4, fieldWidth, fieldHeight);
-        emailJTextField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        this.getContentPane().add(emailJTextField);
-
-        // 性别 (原先是 * 4，现在是 * 5)
-        JLabel genderJlabel = new JLabel("性别");
-        genderJlabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        genderJlabel.setBounds(leftMargin, startY + verticalGap * 5, labelWidth, fieldHeight);
-        this.getContentPane().add(genderJlabel);
-
-        genderComboBox.setBounds(leftMargin + labelWidth, startY + verticalGap * 5, fieldWidth, fieldHeight);
-        genderComboBox.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        genderComboBox.setSelectedIndex(0);
-        this.getContentPane().add(genderComboBox);
-
-        // 生日 (原先是 * 5，现在是 * 6)
-        JLabel birthdayJlabel = new JLabel("生日");
-        birthdayJlabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        birthdayJlabel.setBounds(leftMargin, startY + verticalGap * 6, labelWidth, fieldHeight);
-        this.getContentPane().add(birthdayJlabel);
-
-        birthdayChooser.setBounds(leftMargin + labelWidth, startY + verticalGap * 6, fieldWidth, fieldHeight);
+        addLabel(formPanel, "出生日期", x + 120, y);
+        birthdayChooser = new JDateChooser();
+        birthdayChooser.setBounds(x + 120, y + 25, 255, h);
         birthdayChooser.setDateFormatString("yyyy-MM-dd");
-        birthdayChooser.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        this.getContentPane().add(birthdayChooser);
+        birthdayChooser.setFont(StyleUtils.FONT_NORMAL);
 
-        // 验证码 (原先是 * 6，现在是 * 7)
-        codeTextLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        codeTextLabel.setBounds(leftMargin, startY + verticalGap * 7, labelWidth, fieldHeight);
-        this.getContentPane().add(codeTextLabel);
+        // >>> 新增：调用美化方法 <<<
+        styleDateChooser(birthdayChooser);
 
-        codeJTextField.setBounds(leftMargin + labelWidth, startY + verticalGap * 7, 120, fieldHeight);
-        codeJTextField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        this.getContentPane().add(codeJTextField);
+        formPanel.add(birthdayChooser);
+        // 验证码
+        y += gap;
+        addLabel(formPanel, "验证码", x, y);
+        codeField = new JTextField();
+        codeField.setBounds(x, y + 25, 150, h);
+        StyleUtils.styleTextField(codeField);
+        formPanel.add(codeField);
 
-        generateJlabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
-        generateJlabel.setForeground(Color.RED);
-        generateJlabel.setBounds(leftMargin + labelWidth + 130, startY + verticalGap * 7, 90, fieldHeight);
-        generateJlabel.addMouseListener(this);
-        this.getContentPane().add(generateJlabel);
+        // 验证码显示 (模拟图片)
+        codeImageLbl = new JLabel("ABCD");
+        codeImageLbl.setBounds(x + 170, y + 25, 100, h);
+        codeImageLbl.setOpaque(true);
+        codeImageLbl.setBackground(new Color(240, 248, 255));
+        codeImageLbl.setFont(new Font("Monospaced", Font.BOLD | Font.ITALIC, 24));
+        codeImageLbl.setForeground(Color.BLUE);
+        codeImageLbl.setHorizontalAlignment(SwingConstants.CENTER);
+        codeImageLbl.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        codeImageLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        codeImageLbl.setToolTipText("点击刷新验证码");
+        codeImageLbl.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                refreshCode();
+            }
+        });
+        formPanel.add(codeImageLbl);
 
-        // 注册按钮 (原先是 * 7，现在是 * 8)
-        register.addMouseListener(this);
-        register.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        register.setBounds(leftMargin + labelWidth + 50, startY + verticalGap * 8, 120, 40);
-        this.getContentPane().add(register);
+        // 注册按钮
+        y += gap + 10;
+        JButton registerBtn = new JButton("立即注册");
+        registerBtn.setBounds(x, y, w, 50);
+        StyleUtils.styleButton(registerBtn, StyleUtils.COLOR_PRIMARY);
+        registerBtn.setFont(new Font("微软雅黑", Font.BOLD, 18));
+        registerBtn.addActionListener(e -> performRegister());
+        formPanel.add(registerBtn);
 
-        // 背景需要拉高
-        JLabel backgroundJlabel = new JLabel();
-        backgroundJlabel.setBounds(0, 0, 488, 550); // 适当增加高度
-        backgroundJlabel.setBackground(new Color(220, 235, 250));
-        backgroundJlabel.setOpaque(true);
-        this.getContentPane().add(backgroundJlabel);
-
-
-
+        // 返回登录链接
+        JLabel backLabel = new JLabel("<html>已有账号？<u style='color:#409EFF'>返回登录</u></html>");
+        backLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        backLabel.setFont(StyleUtils.FONT_NORMAL);
+        backLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backLabel.setBounds(x, y + 60, w, 30);
+        backLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dispose();
+                new LoginUi().LoginJFrame();
+            }
+        });
+        formPanel.add(backLabel);
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
+    /**
+     * 专门用于美化 JDateChooser 的“整容手术”方法
+     */
+    private void styleDateChooser(JDateChooser dateChooser) {
+        // 1. 获取并美化内部的文本输入框
+        JTextField dateEditor = (JTextField) dateChooser.getDateEditor().getUiComponent();
+        StyleUtils.styleTextField(dateEditor); // 应用统一的输入框样式
+        dateEditor.setBorder(null); // 去掉多余边框，让它融入背景
 
-    }
+        // 2. 遍历组件找到那个丑丑的按钮，把它变漂亮
+        for (Component comp : dateChooser.getComponents()) {
+            if (comp instanceof JButton) {
+                JButton btn = (JButton) comp;
 
-    @Override
-    public void mousePressed(MouseEvent e) {
+                // 移除自带的像素图标
+                btn.setIcon(null);
 
-    }
+                // 换成高清 Emoji 图标
+                btn.setText("📅");
+                // 稍微调大字体让 Emoji 居中
+                btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        if(e.getSource() == register) {
-            // 获取输入值
-            String name = userJTextField.getText().trim();
-            String password = new String(passwordJTextField.getPassword()).trim();
-            String phone = phoneJTextField.getText().trim();  // 改为 getText()
-            String email = emailJTextField.getText().trim();  // 改为 getText()
-            String code = codeJTextField.getText().trim();
-            String genderDisplay = (String) genderComboBox.getSelectedItem();
-            Date birthday = birthdayChooser.getDate();
-            String confirmPassword = new String(confirmPasswordJTextField.getPassword()).trim();
-            // 基本验证
-            if (name.isEmpty() || password.isEmpty() || phone.isEmpty() ||
-                    email.isEmpty() || birthday == null) {
-                JOptionPane.showMessageDialog(this, "请填写所有必填信息！");
-                return;
+                // 去掉老式按钮的凸起边框
+                btn.setContentAreaFilled(false);
+                btn.setBorderPainted(false);
+                btn.setFocusPainted(false);
+                btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                // 稍微调整一下背景色，让它看起来像一个可点击的图标
+                btn.setBackground(Color.WHITE);
             }
-
-            // >>> 核心验证：两次密码是否一致 <<<
-            if (!password.equals(confirmPassword)) {
-                JOptionPane.showMessageDialog(this, "两次输入的密码不一致，请重新输入！");
-                passwordJTextField.setText("");
-                confirmPasswordJTextField.setText("");
-                return;
-            }
-            // >>> 核心验证结束 <<<
-
-            // 验证码检查
-            if (!code.equalsIgnoreCase(generate)) {
-                JOptionPane.showMessageDialog(this, "验证码错误，请重新输入。");
-                codeJTextField.setText("");
-                generate = utils.LoginUtils.generateVerificationCode();
-                generateJlabel.setText(generate);
-                return;
-            }
-
-
-
-            // 性别转换：UI显示"男"/"女" -> 数据库需要 "male"/"female"
-            String gender = "男".equals(genderDisplay) ? "male" : "female";
-
-            // 注册会员
-            MemberService memberService = new MemberService();
-            MemberService.ServiceResult<Member> result =
-                    memberService.register(name, phone, email, gender, birthday);
-
-            if (result.isSuccess()) {
-                // 获取会员ID并创建用户账户
-                int memberId = result.getData().getId();
-                UserService userService = new UserService();
-                UserService.ServiceResult userResult =
-                        userService.registerMemberUser(memberId, name, password);
-
-                if (userResult.isSuccess()) {
-                    JOptionPane.showMessageDialog(this, "注册成功！请登录。");
-                    this.dispose();
-                    LoginUi loginUi = new LoginUi();
-                    loginUi.LoginJFrame();
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "用户账户创建失败：" + userResult.getMessage());
-                    clearForm();
-                }
-            } else {
-                // 显示具体的失败原因
-                JOptionPane.showMessageDialog(this,
-                        "注册失败：" + result.getMessage());
-                clearForm();
-            }
-        } else if (e.getSource() == generateJlabel) {
-            // 刷新验证码
-            generate = utils.LoginUtils.generateVerificationCode();
-            generateJlabel.setText(generate);
         }
 
+        // 3. 给整个控件加一个统一的边框，让它看起来像一个整体的输入框
+        dateChooser.setBorder(BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(new Color(220, 223, 230), 1),
+                BorderFactory.createEmptyBorder(2, 5, 2, 5)
+        ));
+        dateChooser.setBackground(Color.WHITE);
     }
 
-    private void clearForm() {
-        userJTextField.setText("");
-        passwordJTextField.setText("");
-        phoneJTextField.setText("");
-        emailJTextField.setText("");
-        codeJTextField.setText("");
-        birthdayChooser.setDate(null);
-        genderComboBox.setSelectedIndex(0);
-        generate = utils.LoginUtils.generateVerificationCode();
-        generateJlabel.setText(generate);
+    // 辅助方法：添加小标签
+    private void addLabel(JPanel panel, String text, int x, int y) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("微软雅黑", Font.BOLD, 12));
+        lbl.setForeground(StyleUtils.COLOR_INFO);
+        lbl.setBounds(x, y, 200, 20);
+        panel.add(lbl);
     }
 
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
+    private void refreshCode() {
+        this.currentCode = LoginUtils.generateVerificationCode();
+        codeImageLbl.setText(currentCode);
     }
 
-    @Override
-    public void mouseExited(MouseEvent e) {
+    private void performRegister() {
+        // 1. 获取输入
+        String name = userField.getText().trim();
+        String pass = new String(passField.getPassword()).trim();
+        String confirmPass = new String(confirmPassField.getPassword()).trim();
+        String phone = phoneField.getText().trim();
+        String email = emailField.getText().trim();
+        String genderStr = (String) genderBox.getSelectedItem();
+        Date birth = birthdayChooser.getDate();
+        String inputCode = codeField.getText().trim();
 
+        // 2. 验证非空
+        if (name.isEmpty() || pass.isEmpty() || confirmPass.isEmpty() ||
+                phone.isEmpty() || email.isEmpty() || birth == null || inputCode.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "请填写完整的注册信息！", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 3. 验证密码一致
+        if (!pass.equals(confirmPass)) {
+            JOptionPane.showMessageDialog(this, "两次密码输入不一致！", "错误", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 4. 验证验证码
+        if (!inputCode.equalsIgnoreCase(currentCode)) {
+            JOptionPane.showMessageDialog(this, "验证码错误！", "错误", JOptionPane.ERROR_MESSAGE);
+            refreshCode();
+            codeField.setText("");
+            return;
+        }
+
+        // 5. 调用 Service
+        String gender = "男".equals(genderStr) ? "male" : "female";
+        MemberService memberService = new MemberService();
+        MemberService.ServiceResult<Member> memResult = memberService.register(name, phone, email, gender, birth);
+
+        if (memResult.isSuccess()) {
+            // 注册用户账号
+            UserService userService = new UserService();
+            int memberId = memResult.getData().getId();
+
+            UserService.ServiceResult<Void> userResult = userService.registerMemberUser(memberId, name, pass);
+
+            if (userResult.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "🎉 注册成功！即将跳转登录界面。");
+                this.dispose();
+                new LoginUi().LoginJFrame();
+            } else {
+                JOptionPane.showMessageDialog(this, "会员资料创建成功，但账户创建失败：" + userResult.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "注册失败：" + memResult.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        }
     }
-
-
 }

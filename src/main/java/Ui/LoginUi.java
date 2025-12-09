@@ -1,197 +1,146 @@
 package Ui;
 
 import service.UserService;
+import utils.StyleUtils; // 导入样式
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class LoginUi extends JFrame implements MouseListener {
+
     private JTextField usernameField;
     private JPasswordField passwordField;
-    private UserService userService;
-    //创建登录按钮
-    JButton loginJbutton = new JButton("登录");
-
-    //创建注册的按钮
-    JButton register = new JButton("注册");
-
-    //创建用户名输入
-    JTextField userJTextField = new JTextField();
-
-    //创建密码输入
-    JPasswordField passwordJTextField = new JPasswordField();
-
-    //创建验证码
-    String gennerate= utils.LoginUtils.generateVerificationCode();
-    JLabel gennerateJlabel = new JLabel(gennerate);
-    JLabel codeTextLabel = new JLabel("验证码"); // 稍微加个提示字或者图标
-
-    // 【新增】创建验证码输入框 (用户填这里)
-    JTextField codeJTextField = new JTextField();
+    private JButton loginButton;
+    private JLabel registerLabel;
 
     public void LoginJFrame() {
-        //在创建登录界面的时候,创建
+        // 1. 初始化主题
+        StyleUtils.initGlobalTheme();
 
-        this.setSize(488, 430);
-
-
-        //设置界面标题
-        this.setTitle("健身系统登录页面");
-
-        //设置界面居中
-
-
+        this.setSize(900, 600); // 窗口做大一点，大气
+        this.setTitle("💪 健身房管理系统 - 登录");
         this.setLocationRelativeTo(null);
-
-        //设置空布局
-        this.getContentPane().setLayout(null);
-
-
-        components();
-        //设置游戏的关闭模式
-        //关闭一个页面就关闭所有页面
-
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setLayout(null);
+
+        // 设置整体背景色
+        this.getContentPane().setBackground(StyleUtils.COLOR_BG);
+
+        initView();
 
         this.setVisible(true);
-
     }
 
-    public void components() {
-        //用户名添加
-        JLabel userJlabel = new JLabel("用户名");
-        userJlabel.setBounds(116, 135, 51, 19);
-        this.getContentPane().add(userJlabel);
+    private void initView() {
+        // === 1. 左侧装饰图/标题区 ===
+        JPanel leftPanel = new JPanel();
+        leftPanel.setBounds(0, 0, 400, 600);
+        leftPanel.setBackground(StyleUtils.COLOR_PRIMARY);
+        leftPanel.setLayout(null);
 
+        JLabel logoText = new JLabel("Gym System");
+        logoText.setFont(new Font("Arial", Font.BOLD, 40));
+        logoText.setForeground(Color.WHITE);
+        logoText.setBounds(50, 200, 300, 50);
+        leftPanel.add(logoText);
 
-        //创建用户名的输入框
+        JLabel subText = new JLabel("专业的健身房管理专家");
+        subText.setFont(StyleUtils.FONT_NORMAL);
+        subText.setForeground(new Color(255, 255, 255, 200));
+        subText.setBounds(55, 260, 300, 30);
+        leftPanel.add(subText);
 
-        userJTextField.setBounds(195, 134, 200, 30);
-        this.getContentPane().add(userJTextField);
+        this.add(leftPanel);
 
-        //创建密码文字
-        JLabel passwordJlabel = new JLabel("密码");
-        passwordJlabel.setBounds(130, 195, 35, 18);
-        this.getContentPane().add(passwordJlabel);
+        // === 2. 右侧登录表单区 ===
+        int startX = 500;
+        int startY = 120;
+        int fieldW = 300;
+        int fieldH = 45; // 增高输入框
 
-        //创建密码的文本输入框
+        JLabel titleLbl = new JLabel("欢迎登录");
+        titleLbl.setFont(StyleUtils.FONT_TITLE_BIG);
+        titleLbl.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        titleLbl.setBounds(startX, startY, 200, 40);
+        this.add(titleLbl);
 
-        passwordJTextField.setBounds(195, 195, 200, 30);
-        this.getContentPane().add(passwordJTextField);
+        // 用户名
+        JLabel uLabel = new JLabel("账号 / Username");
+        uLabel.setFont(StyleUtils.FONT_NORMAL);
+        uLabel.setForeground(StyleUtils.COLOR_INFO);
+        uLabel.setBounds(startX, startY + 60, 200, 30);
+        this.add(uLabel);
 
+        usernameField = new JTextField();
+        usernameField.setBounds(startX, startY + 90, fieldW, fieldH);
+        StyleUtils.styleTextField(usernameField);
+        this.add(usernameField);
 
-        //创建登录按钮
-        loginJbutton.addMouseListener(this);
-        loginJbutton.setBounds(133, 310, 90, 40);
-        this.getContentPane().add(loginJbutton);
+        // 密码
+        JLabel pLabel = new JLabel("密码 / Password");
+        pLabel.setFont(StyleUtils.FONT_NORMAL);
+        pLabel.setForeground(StyleUtils.COLOR_INFO);
+        pLabel.setBounds(startX, startY + 150, 200, 30);
+        this.add(pLabel);
 
+        passwordField = new JPasswordField();
+        passwordField.setBounds(startX, startY + 180, fieldW, fieldH);
+        StyleUtils.styleTextField(passwordField);
+        this.add(passwordField);
 
-        //创建注册的按钮
-        register.addMouseListener(this);
-        register.setBounds(256, 310, 90, 40);
-        this.getContentPane().add(register);
+        // 登录按钮
+        loginButton = new JButton("立即登录");
+        loginButton.setBounds(startX, startY + 260, fieldW, 50);
+        StyleUtils.styleButton(loginButton, StyleUtils.COLOR_PRIMARY);
+        loginButton.setFont(new Font("微软雅黑", Font.BOLD, 18));
+        loginButton.addMouseListener(this);
+        this.add(loginButton);
 
-        //验证码输入框
-
-
-        codeTextLabel.setBounds(130, 256, 50, 30);
-        this.getContentPane().add(codeTextLabel);
-
-        codeJTextField.setBounds(195, 256, 100, 30); // 输入框宽度100
-        this.getContentPane().add(codeJTextField);
-
-        //生成验证码并呈现
-
-        gennerateJlabel.setFont(new Font("微软雅黑", Font.BOLD, 20));
-        gennerateJlabel.setForeground(Color.RED); // 红色醒目
-        gennerateJlabel.setBounds(305, 256, 90, 30);//设置坐标
-        gennerateJlabel.addMouseListener(this);//添加监听
-        this.getContentPane().add(gennerateJlabel);
-
-        //背景色创建
-        JLabel backgroundJlabel = new JLabel();
-        backgroundJlabel.setBounds(0, 0, 470, 390);
-        backgroundJlabel.setBackground(new Color(220, 235, 250));
-        backgroundJlabel.setOpaque(true);
-//        // 将背景添加到索引 0 的位置，这在 Swing 中意味着最底层。
-        this.getContentPane().add(backgroundJlabel);
-
+        // 注册链接
+        registerLabel = new JLabel("<html><u>没有账号？点此注册会员</u></html>");
+        registerLabel.setFont(StyleUtils.FONT_NORMAL);
+        registerLabel.setForeground(StyleUtils.COLOR_PRIMARY);
+        registerLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        registerLabel.setBounds(startX, startY + 320, 200, 30);
+        registerLabel.addMouseListener(this);
+        this.add(registerLabel);
     }
-
-
 
     @Override
     public void mouseClicked(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-        if (e.getSource() == gennerateJlabel) {
-            gennerate = utils.LoginUtils.generateVerificationCode();
-            gennerateJlabel.setText(gennerate);
-        }
-
-        if (e.getSource() == loginJbutton) {
-            UserService userService = new UserService();
-            String username = userJTextField.getText();
-            String password = new String(passwordJTextField.getPassword());
-            String code = codeJTextField.getText();
-            if (!code.equalsIgnoreCase(gennerate.trim())) {
-                JOptionPane.showMessageDialog(this, "验证码错误！");
-                userJTextField.setText("");
-                passwordJTextField.setText("");
-                gennerate= utils.LoginUtils.generateVerificationCode();
-                gennerateJlabel.setText(gennerate);
-                codeJTextField.setText("");
-                return;
-            }
-
-            UserService.LoginResult result = userService.login(username, password);
-
-            // 然后判断 result 是否成功
-            if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "登录成功！");
-                this.dispose(); // 关闭登录界面
-
-                new MainUi(result.getUserType(), result.getUserData());
-
-            }else {
-                JOptionPane.showMessageDialog(this, "用户名或密码错误！", "登录失败",JOptionPane.ERROR_MESSAGE);
-                userJTextField.setText("");
-                passwordJTextField.setText("");
-                gennerate= utils.LoginUtils.generateVerificationCode();
-                gennerateJlabel.setText(gennerate);
-                codeJTextField.setText("");
-            }
-        }
-
-        if (e.getSource() == register) {
+        if (e.getSource() == loginButton) {
+            handleLogin();
+        } else if (e.getSource() == registerLabel) {
             this.dispose();
-            RegisterUi registerUi = new RegisterUi();
-            registerUi.RegisterJFrame();
+            new RegisterUi().RegisterJFrame();
+        }
+    }
+
+    private void handleLogin() {
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "请输入用户名和密码");
+            return;
         }
 
+        UserService userService = new UserService();
+        UserService.LoginResult result = userService.login(username, password);
 
-
+        if (result.isSuccess()) {
+            this.dispose();
+            new MainUi(result.getUserType(), result.getUserData());
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "登录失败", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
-
+    // 空实现
+    public void mousePressed(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
 }

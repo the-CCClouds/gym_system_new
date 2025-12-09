@@ -1,10 +1,12 @@
 package Ui;
 
-import com.toedter.calendar.JDateChooser; // 确保引入了 jcalendar 库
+import com.toedter.calendar.JDateChooser;
+import entity.Course;
 import entity.Employee;
 import service.CourseService;
+import service.ServiceResult;
 import service.EmployeeService;
-import utils.DateUtils;
+import utils.StyleUtils; // 引入样式
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,222 +16,199 @@ import java.util.List;
 
 public class CourseAddUi extends JFrame {
 
+    private CourseManageUi parentUi; // 用于刷新父窗口
     private CourseService courseService;
     private EmployeeService employeeService;
-    private Runnable onSuccessCallback;
 
-    // 表单组件
+    // 组件
     private JTextField nameField;
-    private JComboBox<String> typeCombo;
+    private JComboBox<String> typeBox;
+    private JComboBox<TrainerItem> trainerBox; // 存放教练对象
+    private JDateChooser dateChooser;
+    private JSpinner timeSpinner; // 时间选择
     private JTextField durationField;
     private JTextField capacityField;
-    private JComboBox<TrainerItem> trainerCombo;
 
-    // 日期和时间选择组件
-    private JDateChooser dateChooser;
-    private JSpinner timeSpinner;
-
-    public CourseAddUi(Runnable onSuccessCallback) {
-        this.onSuccessCallback = onSuccessCallback;
+    public CourseAddUi(CourseManageUi parent) {
+        this.parentUi = parent;
         this.courseService = new CourseService();
-        this.employeeService = new EmployeeService();
+        this.employeeService = new EmployeeService(); // 需确保有此服务
 
-        this.setTitle("发布新课程");
-        this.setSize(450, 580); // 调整高度以容纳所有组件
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.getContentPane().setLayout(null);
+        StyleUtils.initGlobalTheme();
+        setTitle("📝 发布新课程");
+        setSize(500, 650);
+        setLocationRelativeTo(parent);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(null);
 
         initView();
-        this.setVisible(true);
+        loadTrainers(); // 加载教练列表
+        setVisible(true);
     }
 
     private void initView() {
-        int labelX = 50;
-        int fieldX = 130;
-        int startY = 30;
-        int gap = 50;
+        JPanel formPanel = new JPanel(null);
+        formPanel.setBounds(30, 30, 425, 540);
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        add(formPanel);
+
+        // 标题
+        JLabel titleLbl = new JLabel("排课信息录入", SwingConstants.CENTER);
+        titleLbl.setFont(StyleUtils.FONT_TITLE);
+        titleLbl.setForeground(StyleUtils.COLOR_PRIMARY);
+        titleLbl.setBounds(0, 20, 425, 30);
+        formPanel.add(titleLbl);
+
+        int x = 40, y = 70, w = 345, h = 40, gap = 70;
 
         // 1. 课程名称
-        addLabel("课程名称:", labelX, startY);
+        addLabel(formPanel, "课程名称", x, y - 25);
         nameField = new JTextField();
-        nameField.setBounds(fieldX, startY, 220, 30);
-        this.getContentPane().add(nameField);
+        StyleUtils.styleTextField(nameField);
+        nameField.setBounds(x, y, w, h);
+        formPanel.add(nameField);
 
         // 2. 课程类型
-        addLabel("课程类型:", labelX, startY + gap);
-        String[] types = {"yoga", "spinning", "pilates", "aerobics", "strength", "other"};
-        typeCombo = new JComboBox<>(types);
-        typeCombo.setBounds(fieldX, startY + gap, 220, 30);
-        this.getContentPane().add(typeCombo);
+        y += gap;
+        addLabel(formPanel, "课程类型", x, y - 25);
+        String[] types = {
+                CourseService.TYPE_YOGA,
+                CourseService.TYPE_SPINNING,
+                CourseService.TYPE_PILATES,
+                CourseService.TYPE_AEROBICS,
+                CourseService.TYPE_STRENGTH,
+                CourseService.TYPE_OTHER
+        };
+        typeBox = new JComboBox<>(types);
+        typeBox.setBackground(Color.WHITE);
+        typeBox.setBounds(x, y, w, h);
+        formPanel.add(typeBox);
 
-        // 3. 时长
-        addLabel("时长(分钟):", labelX, startY + gap * 2);
-        durationField = new JTextField("60");
-        durationField.setBounds(fieldX, startY + gap * 2, 220, 30);
-        this.getContentPane().add(durationField);
+        // 3. 授课教练
+        y += gap;
+        addLabel(formPanel, "授课教练", x, y - 25);
+        trainerBox = new JComboBox<>();
+        trainerBox.setBackground(Color.WHITE);
+        trainerBox.setBounds(x, y, w, h);
+        formPanel.add(trainerBox);
 
-        // 4. 容量
-        addLabel("最大人数:", labelX, startY + gap * 3);
-        capacityField = new JTextField("10");
-        capacityField.setBounds(fieldX, startY + gap * 3, 220, 30);
-        this.getContentPane().add(capacityField);
+        // 4. 上课日期 & 时间 (一行两个)
+        y += gap;
+        addLabel(formPanel, "上课日期", x, y - 25);
+        addLabel(formPanel, "时间", x + 200, y - 25);
 
-        // 5. 上课时间 (日期 + 时间)
-        addLabel("上课时间:", labelX, startY + gap * 4);
-
-        // (1) 左侧：日期选择器
         dateChooser = new JDateChooser();
         dateChooser.setDateFormatString("yyyy-MM-dd");
-        dateChooser.setDate(new Date()); // 默认今天
-        dateChooser.setBounds(fieldX, startY + gap * 4, 130, 30);
-        this.getContentPane().add(dateChooser);
+        dateChooser.setBounds(x, y, 190, h);
+        // 简单美化 dateChooser (去边框)
+        dateChooser.getDateEditor().getUiComponent().setBorder(BorderFactory.createEmptyBorder());
+        dateChooser.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        formPanel.add(dateChooser);
 
-        // (2) 右侧：时间微调器
+        // 时间选择器 (Spinner)
         SpinnerDateModel model = new SpinnerDateModel();
         timeSpinner = new JSpinner(model);
         JSpinner.DateEditor editor = new JSpinner.DateEditor(timeSpinner, "HH:mm");
         timeSpinner.setEditor(editor);
-        // 设置默认时间为 10:00
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY, 10);
-        cal.set(Calendar.MINUTE, 0);
-        timeSpinner.setValue(cal.getTime());
+        timeSpinner.setValue(new Date()); // 默认当前时间
+        timeSpinner.setBounds(x + 200, y, 145, h);
+        formPanel.add(timeSpinner);
 
-        timeSpinner.setBounds(fieldX + 140, startY + gap * 4, 80, 30);
-        this.getContentPane().add(timeSpinner);
+        // 5. 时长 & 容量
+        y += gap;
+        addLabel(formPanel, "时长 (分钟)", x, y - 25);
+        addLabel(formPanel, "最大人数", x + 180, y - 25);
 
-        // 提示文字
-        JLabel hintLabel = new JLabel("请分别选择 日期 和 时间");
-        hintLabel.setFont(new Font("宋体", Font.PLAIN, 12));
-        hintLabel.setForeground(Color.GRAY);
-        hintLabel.setBounds(fieldX, startY + gap * 4 + 30, 200, 20);
-        this.getContentPane().add(hintLabel);
+        durationField = new JTextField("60"); // 默认60
+        StyleUtils.styleTextField(durationField);
+        durationField.setBounds(x, y, 160, h);
+        formPanel.add(durationField);
 
-        // 6. 选择教练 (位置下移)
-        int trainerY = startY + gap * 5 + 15;
-        addLabel("授课教练:", labelX, trainerY);
-        trainerCombo = new JComboBox<>();
-        loadTrainers();
-        trainerCombo.setBounds(fieldX, trainerY, 220, 30);
-        this.getContentPane().add(trainerCombo);
+        capacityField = new JTextField("20"); // 默认20
+        StyleUtils.styleTextField(capacityField);
+        capacityField.setBounds(x + 180, y, 165, h);
+        formPanel.add(capacityField);
 
-        // 7. 按钮区域
-        int btnY = trainerY + 60;
-        JButton confirmBtn = new JButton("确认发布");
-        confirmBtn.setBackground(new Color(100, 200, 100));
-        confirmBtn.setBounds(100, btnY, 100, 40);
-        confirmBtn.addActionListener(e -> performAdd());
-        this.getContentPane().add(confirmBtn);
-
-        JButton cancelBtn = new JButton("取消");
-        cancelBtn.setBounds(240, btnY, 100, 40);
-        cancelBtn.addActionListener(e -> this.dispose());
-        this.getContentPane().add(cancelBtn);
-
-        // 背景色
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 450, 580);
-        bg.setBackground(new Color(245, 245, 245));
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
+        // 提交按钮
+        y += gap + 10;
+        JButton submitBtn = new JButton("确认发布");
+        StyleUtils.styleButton(submitBtn, StyleUtils.COLOR_PRIMARY);
+        submitBtn.setBounds(x, y, w, 45);
+        submitBtn.addActionListener(e -> performAdd());
+        formPanel.add(submitBtn);
     }
 
-    private void addLabel(String text, int x, int y) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        label.setBounds(x, y, 80, 30);
-        this.getContentPane().add(label);
+    private void addLabel(JPanel p, String txt, int x, int y) {
+        JLabel l = new JLabel(txt);
+        l.setFont(StyleUtils.FONT_NORMAL);
+        l.setForeground(StyleUtils.COLOR_INFO);
+        l.setBounds(x, y, 200, 20);
+        p.add(l);
+    }
+
+    // 内部类：用于 ComboBox 显示教练名但存储对象
+    private static class TrainerItem {
+        Employee emp;
+        public TrainerItem(Employee emp) { this.emp = emp; }
+        @Override public String toString() { return emp.getName() + " (ID:" + emp.getId() + ")"; }
     }
 
     private void loadTrainers() {
-        // 使用 EmployeeService 获取所有教练
-        List<Employee> employees = employeeService.getEmployeesByRole(EmployeeService.ROLE_TRAINER);
-        if (employees != null) {
-            for (Employee emp : employees) {
-                trainerCombo.addItem(new TrainerItem(emp.getId(), emp.getName()));
+        // 假设 EmployeeService 有 getAllEmployees 或 getTrainers
+        // 这里为了稳妥，我们用 getEmployeesByRole (假设你有) 或者遍历所有员工
+        // 如果没有现成方法，你需要自己确保 Service 能查到教练
+        List<Employee> list = employeeService.getAllEmployees();
+        for (Employee e : list) {
+            // 简单筛选角色 (假设 Role ID 2 是教练)
+            if (e.getRoleId() == dao.EmployeeRoleDAO.ROLE_ID_TRAINER) {
+                trainerBox.addItem(new TrainerItem(e));
             }
         }
     }
 
     private void performAdd() {
-        // 1. 获取基础输入
         String name = nameField.getText().trim();
-        String type = (String) typeCombo.getSelectedItem();
-        String durationStr = durationField.getText().trim();
-        String capacityStr = capacityField.getText().trim();
-        TrainerItem selectedTrainer = (TrainerItem) trainerCombo.getSelectedItem();
+        String type = (String) typeBox.getSelectedItem();
+        TrainerItem trainerItem = (TrainerItem) trainerBox.getSelectedItem();
+        Date date = dateChooser.getDate();
+        Date time = (Date) timeSpinner.getValue();
 
-        // 2. 基础校验
-        if (name.isEmpty() || durationStr.isEmpty() || capacityStr.isEmpty() || selectedTrainer == null) {
-            JOptionPane.showMessageDialog(this, "请填写所有必填信息！");
+        if (name.isEmpty() || trainerItem == null || date == null) {
+            JOptionPane.showMessageDialog(this, "请补全课程基本信息！");
             return;
         }
 
-        // 3. 获取并合并日期时间
-        Date selectedDate = dateChooser.getDate();
-        Date selectedTime = (Date) timeSpinner.getValue();
-
-        if (selectedDate == null) {
-            JOptionPane.showMessageDialog(this, "请选择上课日期！");
-            return;
-        }
-
-        // 合并逻辑：取日期的年月日 + 时间的时分
-        Calendar dateCal = Calendar.getInstance();
-        dateCal.setTime(selectedDate);
-
-        Calendar timeCal = Calendar.getInstance();
-        timeCal.setTime(selectedTime);
-
-        Calendar finalCal = Calendar.getInstance();
-        finalCal.set(dateCal.get(Calendar.YEAR),
-                dateCal.get(Calendar.MONTH),
-                dateCal.get(Calendar.DAY_OF_MONTH),
-                timeCal.get(Calendar.HOUR_OF_DAY),
-                timeCal.get(Calendar.MINUTE),
-                0); // 秒置0
-
-        Date courseTime = finalCal.getTime();
-
-        // 4. 提交数据
         try {
-            int duration = Integer.parseInt(durationStr);
-            int capacity = Integer.parseInt(capacityStr);
-            int trainerId = selectedTrainer.id;
+            int duration = Integer.parseInt(durationField.getText().trim());
+            int capacity = Integer.parseInt(capacityField.getText().trim());
 
-            // 调用 Service 创建课程
-            CourseService.ServiceResult result = courseService.createCourse(
-                    name, type, duration, capacity, trainerId, courseTime);
+            // 合并日期和时间
+            Calendar calDate = Calendar.getInstance();
+            calDate.setTime(date);
+            Calendar calTime = Calendar.getInstance();
+            calTime.setTime(time);
+
+            calDate.set(Calendar.HOUR_OF_DAY, calTime.get(Calendar.HOUR_OF_DAY));
+            calDate.set(Calendar.MINUTE, calTime.get(Calendar.MINUTE));
+            Date finalDate = calDate.getTime();
+
+            // 调用 Service
+            CourseService.ServiceResult<Course> result = courseService.createCourse(
+                    name, type, duration, capacity, trainerItem.emp.getId(), finalDate
+            );
 
             if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "课程发布成功！\n时间：" + DateUtils.formatDateTime(courseTime));
-                if (onSuccessCallback != null) {
-                    onSuccessCallback.run(); // 刷新父界面
-                }
-                this.dispose();
+                JOptionPane.showMessageDialog(this, "🎉 发布成功！");
+                if (parentUi != null) parentUi.loadData(); // 刷新父窗口
+                dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "发布失败：" + result.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "❌ 失败：" + result.getMessage());
             }
 
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "时长和容量必须是有效的数字！");
-        }
-    }
-
-    // 内部类：用于下拉框显示
-    private static class TrainerItem {
-        int id;
-        String name;
-
-        public TrainerItem(int id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return name; // JComboBox 显示这个名字
+            JOptionPane.showMessageDialog(this, "时长和容量必须是数字！");
         }
     }
 }

@@ -3,7 +3,8 @@ package Ui;
 import entity.Booking;
 import entity.Member;
 import service.BookingService;
-import service.BookingService.BookingDetail;
+import service.ServiceResult;
+import utils.StyleUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -15,7 +16,6 @@ public class MyBookingUi extends JFrame {
     private Member member;
     private BookingService bookingService;
 
-    // 表格组件
     private JTable bookingTable;
     private DefaultTableModel tableModel;
 
@@ -23,135 +23,160 @@ public class MyBookingUi extends JFrame {
         this.member = member;
         this.bookingService = new BookingService();
 
-        // 1. 窗口基本设置
-        this.setTitle("我的预约记录 - " + member.getName());
-        this.setSize(800, 500);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.getContentPane().setLayout(null);
+        // 1. 初始化全局主题
+        StyleUtils.initGlobalTheme();
 
-        // 2. 初始化组件
+        setTitle("📋 我的课程预约记录");
+        setSize(900, 600); // 稍微宽一点，显示更多信息
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(new BorderLayout(15, 15));
+
         initView();
-
-        // 3. 加载数据
-        loadBookingData();
-
-        this.setVisible(true);
+        loadMyBookings();
+        setVisible(true);
     }
 
     private void initView() {
-        // 标题
-        JLabel titleLabel = new JLabel("我的预约");
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 20));
-        titleLabel.setBounds(30, 20, 150, 30);
-        this.getContentPane().add(titleLabel);
+        // === 顶部标题栏 ===
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // 表格列名
-        String[] columnNames = {"预约ID", "课程名称", "上课时间", "教练", "下单时间", "状态"}; // 【调整列】
-
-        // 创建表格模型
-        tableModel = new DefaultTableModel(columnNames, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // 禁止编辑
-            }
-        };
-
-        // 创建表格
-        bookingTable = new JTable(tableModel);
-        bookingTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        bookingTable.setRowHeight(25);
-        bookingTable.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-
-        // 滚动面板
-        JScrollPane scrollPane = new JScrollPane(bookingTable);
-        scrollPane.setBounds(30, 60, 720, 300);
-        this.getContentPane().add(scrollPane);
+        JLabel titleLbl = new JLabel("📅 我的预约历史");
+        titleLbl.setFont(StyleUtils.FONT_TITLE);
+        titleLbl.setForeground(StyleUtils.COLOR_TEXT_MAIN);
 
         // 刷新按钮
-        JButton refreshBtn = new JButton("刷新列表");
-        refreshBtn.setBounds(30, 380, 120, 40);
-        refreshBtn.addActionListener(e -> loadBookingData());
-        this.getContentPane().add(refreshBtn);
+        JButton refreshBtn = new JButton("🔄 刷新列表");
+        StyleUtils.styleButton(refreshBtn, StyleUtils.COLOR_PRIMARY);
+        refreshBtn.addActionListener(e -> loadMyBookings());
 
-        // 取消预约按钮
-        JButton cancelBtn = new JButton("取消预约");
-        cancelBtn.setFont(new Font("微软雅黑", Font.BOLD, 15));
-        cancelBtn.setBounds(630, 380, 120, 40);
-        cancelBtn.setBackground(new Color(220, 100, 100)); // 红色按钮
-        cancelBtn.setForeground(Color.WHITE);
-        cancelBtn.addActionListener(e -> performCancel());
-        this.getContentPane().add(cancelBtn);
+        topPanel.add(titleLbl, BorderLayout.WEST);
+        topPanel.add(refreshBtn, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);
 
-        // 背景
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 800, 500);
-        bg.setBackground(new Color(240, 248, 255));
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
-    }
+        // === 中间表格区域 ===
+        // 使用白色背景容器包裹表格
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(Color.WHITE);
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20)); // 左右留白
 
-    // 加载数据
-    private void loadBookingData() {
-        tableModel.setRowCount(0); // 清空
+        String[] cols = {"预约ID", "课程名称", "上课时间", "教练", "当前状态", "操作提示"};
+        tableModel = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
 
-        // 获取该会员的所有预约
-        List<Booking> bookings = bookingService.getBookingsByMember(member.getId());
+        bookingTable = new JTable(tableModel);
+        StyleUtils.styleTable(bookingTable); // 应用美化样式
 
-        // 倒序遍历（最新的在最前面）
-        for (int i = bookings.size() - 1; i >= 0; i--) {
-            Booking booking = bookings.get(i);
-
-            // 获取预约详情（为了拿到课程名和教练名）
-            BookingDetail detail = bookingService.getBookingDetail(booking.getBookingId());
-            String classTime = "未知";
-            if (detail.getCourse() != null) {
-                classTime =utils.DateUtils.formatDateTime(detail.getCourse().getCourseTime());
+        // 添加双击事件：取消预约
+        bookingTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) cancelBooking();
             }
-            Object[] rowData = {
-                    booking.getBookingId(),
-                    detail.getCourseName(),
-                    classTime,
-                    detail.getTrainerName(),
-                    // 格式化时间，如果 detail 里已经格式化好了就用 detail 的，否则用工具类
-                    detail.getBookingTimeFormatted(),
-                    detail.getStatusDisplayName() // 显示中文状态
-            };
-            tableModel.addRow(rowData);
+        });
+
+        JScrollPane scroll = new JScrollPane(bookingTable);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        scroll.getViewport().setBackground(Color.WHITE);
+
+        centerPanel.add(scroll, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
+
+        // === 底部提示栏 ===
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        bottomPanel.setBackground(StyleUtils.COLOR_BG);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        JLabel tipLbl = new JLabel("💡 提示：双击表格中的记录可进行 [取消预约] 操作");
+        tipLbl.setFont(StyleUtils.FONT_NORMAL);
+        tipLbl.setForeground(StyleUtils.COLOR_INFO);
+        bottomPanel.add(tipLbl);
+
+        add(bottomPanel, BorderLayout.SOUTH);
+    }
+
+    private void loadMyBookings() {
+        tableModel.setRowCount(0);
+        // 获取该会员的所有预约
+        List<Booking> list = bookingService.getBookingsByMember(member.getId());
+
+        for (Booking b : list) {
+            // 获取详细信息（利用 Service 中已有的 getBookingDetail 方法）
+            service.BookingService.BookingDetail detail = bookingService.getBookingDetail(b.getBookingId());
+
+            String courseName = "未知课程";
+            String trainer = "-";
+            String time = "-";
+
+            if (detail != null) {
+                courseName = detail.getCourseName();
+                trainer = detail.getTrainerName();
+                // 如果 Course 实体有 getCourseTime()，且不为空
+                if (detail.getCourse() != null && detail.getCourse().getCourseTime() != null) {
+                    time = utils.DateUtils.formatDateTime(detail.getCourse().getCourseTime());
+                }
+            }
+
+            // 状态美化：将英文状态转换为中文+图标
+            String statusRaw = b.getBookingStatus();
+            String statusDisplay;
+
+            if (BookingService.STATUS_CONFIRMED.equals(statusRaw)) {
+                statusDisplay = "✅ 已确认";
+            } else if (BookingService.STATUS_PENDING.equals(statusRaw)) {
+                statusDisplay = "⏳ 待确认";
+            } else if (BookingService.STATUS_CANCELLED.equals(statusRaw)) {
+                statusDisplay = "⚪ 已取消";
+            } else {
+                statusDisplay = statusRaw;
+            }
+
+            // 操作提示列
+            String actionTip = statusRaw.equals(BookingService.STATUS_CANCELLED) ? "-" : "双击取消";
+
+            tableModel.addRow(new Object[]{
+                    b.getBookingId(),
+                    courseName,
+                    time,
+                    trainer,
+                    statusDisplay,
+                    actionTip
+            });
         }
     }
 
-    // 执行取消操作
-    private void performCancel() {
-        int selectedRow = bookingTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "请选择要取消的预约记录");
+    private void cancelBooking() {
+        int row = bookingTable.getSelectedRow();
+        if (row == -1) return;
+
+        int bookingId = (int) tableModel.getValueAt(row, 0);
+        String courseName = (String) tableModel.getValueAt(row, 1);
+        String statusDisplay = (String) tableModel.getValueAt(row, 4);
+
+        // 如果已经是取消状态，就别弹窗了
+        if (statusDisplay.contains("已取消")) {
+            JOptionPane.showMessageDialog(this, "该预约已经是取消状态了，无需重复操作。");
             return;
         }
 
-        // 获取选中行的 ID 和 状态
-        int bookingId = (int) tableModel.getValueAt(selectedRow, 0);
-        String status = (String) tableModel.getValueAt(selectedRow, 4);
+        // 确认弹窗
+        int opt = JOptionPane.showConfirmDialog(this,
+                "确定要取消课程 [" + courseName + "] 的预约吗？\n取消后名额将释放给其他会员。",
+                "取消确认", JOptionPane.YES_NO_OPTION);
 
-        // 检查状态
-        if ("已取消".equals(status)) {
-            JOptionPane.showMessageDialog(this, "该预约已经是取消状态了！");
-            return;
-        }
+        if (opt == JOptionPane.YES_OPTION) {
+            // 调用 Service 的成员取消方法
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "确定要取消这条预约吗？", "确认取消", JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            // 调用 Service 取消预约
-            // 这里的 member.getId() 传入是为了验证身份，Service 中 memberCancelBooking 方法会检查
-            BookingService.ServiceResult result = bookingService.memberCancelBooking(member.getId(), bookingId);
-
-            if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "取消成功！");
-                loadBookingData(); // 刷新表格
+            BookingService.ServiceResult<Booking> res = bookingService.memberCancelBooking(member.getId(), bookingId);
+            if (res.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "✅ 预约已成功取消！");
+                loadMyBookings(); // 刷新表格
             } else {
-                JOptionPane.showMessageDialog(this, "取消失败：" + result.getMessage());
+                JOptionPane.showMessageDialog(this, "❌ 取消失败：" + res.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

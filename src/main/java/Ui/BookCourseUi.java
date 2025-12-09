@@ -1,19 +1,16 @@
 package Ui;
 
-import com.toedter.calendar.JDateChooser; // 引入日历组件
+import entity.Booking;
 import entity.Course;
 import entity.Member;
 import service.BookingService;
 import service.CourseService;
-import service.CourseService.CourseDetail;
-import utils.DateUtils; // 引入工具类
+import service.ServiceResult;
+import utils.StyleUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Date;
 import java.util.List;
 
 public class BookCourseUi extends JFrame {
@@ -22,188 +19,157 @@ public class BookCourseUi extends JFrame {
     private CourseService courseService;
     private BookingService bookingService;
 
-    // 表格相关组件
     private JTable courseTable;
     private DefaultTableModel tableModel;
-
-    // 【新增】日期筛选组件
-    private JDateChooser dateChooser;
+    private JTextField searchField;
 
     public BookCourseUi(Member member) {
         this.member = member;
         this.courseService = new CourseService();
         this.bookingService = new BookingService();
 
-        // 1. 窗口基本设置
-        this.setTitle("预约课程 - " + member.getName());
-        this.setSize(900, 600); // 稍微加宽加高
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.getContentPane().setLayout(null);
+        // 1. 初始化主题
+        StyleUtils.initGlobalTheme();
 
-        // 2. 初始化界面组件
+        setTitle("📅 预约课程 - " + member.getName());
+        setSize(900, 600);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(new BorderLayout(15, 15));
+
         initView();
-
-        // 3. 加载数据 (默认加载全部，或者你可以设为默认加载今天)
-        loadCourseData();
-
-        this.setVisible(true);
+        loadCourses();
+        setVisible(true);
     }
 
     private void initView() {
-        // --- 标题 ---
-        JLabel titleLabel = new JLabel("课程列表");
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 20));
-        titleLabel.setBounds(30, 20, 150, 30);
-        this.getContentPane().add(titleLabel);
+        // === 顶部标题栏 ===
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // --- 【新增】筛选区域 (Y=60) ---
-        JLabel filterLabel = new JLabel("按日期筛选:");
-        filterLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        filterLabel.setBounds(30, 60, 80, 30);
-        this.getContentPane().add(filterLabel);
+        JLabel titleLbl = new JLabel("🔥 热门课程预约");
+        titleLbl.setFont(StyleUtils.FONT_TITLE);
+        titleLbl.setForeground(StyleUtils.COLOR_TEXT_MAIN);
 
-        // 日历组件
-        dateChooser = new JDateChooser();
-        dateChooser.setDateFormatString("yyyy-MM-dd");
-        dateChooser.setDate(new Date()); // 默认选中今天
-        dateChooser.setBounds(110, 60, 150, 30);
-        this.getContentPane().add(dateChooser);
+        // 搜索区
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        searchPanel.setOpaque(false);
+        searchField = new JTextField(15);
+        StyleUtils.styleTextField(searchField);
+        JButton searchBtn = new JButton("🔍 搜索");
+        StyleUtils.styleButton(searchBtn, StyleUtils.COLOR_PRIMARY);
+        searchBtn.addActionListener(e -> loadCourses());
 
-        // 查询按钮
-        JButton searchBtn = new JButton("查询");
-        searchBtn.setBounds(270, 60, 80, 30);
-        searchBtn.addActionListener(e -> loadCourseData());
-        this.getContentPane().add(searchBtn);
+        searchPanel.add(searchField);
+        searchPanel.add(searchBtn);
 
-        // 显示全部按钮
-        JButton showAllBtn = new JButton("显示全部");
-        showAllBtn.setBounds(360, 60, 100, 30);
-        showAllBtn.addActionListener(e -> {
-            dateChooser.setDate(null); // 清空日期
-            loadCourseData();
-        });
-        this.getContentPane().add(showAllBtn);
+        topPanel.add(titleLbl, BorderLayout.WEST);
+        topPanel.add(searchPanel, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);
 
-        // --- 表格区域 (Y下移到 110) ---
-        String[] columnNames = {"ID", "课程名称", "上课时间", "类型", "时长", "教练", "剩余名额", "状态"};
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        // === 中间表格区域 ===
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(Color.WHITE);
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20)); // 左右留白
+
+        String[] cols = {"ID", "课程名称", "教练", "时间", "时长(分)", "剩余名额", "状态"};
+        tableModel = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int col) { return false; }
         };
 
         courseTable = new JTable(tableModel);
-        courseTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        courseTable.setRowHeight(25);
-        courseTable.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-
-        // 调整列宽 (可选)
-        courseTable.getColumnModel().getColumn(0).setPreferredWidth(40); // ID
-        courseTable.getColumnModel().getColumn(2).setPreferredWidth(140); // 时间
+        StyleUtils.styleTable(courseTable);
 
         JScrollPane scrollPane = new JScrollPane(courseTable);
-        scrollPane.setBounds(30, 110, 820, 350); // 高度调整
-        this.getContentPane().add(scrollPane);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // --- 底部按钮 (Y下移到 480) ---
-        JButton refreshBtn = new JButton("刷新列表");
-        refreshBtn.setBounds(30, 480, 120, 40);
-        refreshBtn.addActionListener(e -> loadCourseData());
-        this.getContentPane().add(refreshBtn);
+        add(centerPanel, BorderLayout.CENTER);
 
-        JButton bookBtn = new JButton("立即预约");
-        bookBtn.setFont(new Font("微软雅黑", Font.BOLD, 15));
-        bookBtn.setBounds(730, 480, 120, 40);
-        bookBtn.setBackground(new Color(100, 200, 100)); // 绿色按钮
-        bookBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                performBooking();
-            }
-        });
-        this.getContentPane().add(bookBtn);
+        // === 底部操作栏 ===
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
+        bottomPanel.setBackground(Color.WHITE);
 
-        // 背景
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 900, 600);
-        bg.setBackground(new Color(240, 248, 255));
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
+        JButton refreshBtn = new JButton("🔄 刷新列表");
+        StyleUtils.styleButton(refreshBtn, StyleUtils.COLOR_INFO);
+        refreshBtn.addActionListener(e -> loadCourses());
+
+        JButton bookBtn = new JButton("✅ 立即预约");
+        StyleUtils.styleButton(bookBtn, StyleUtils.COLOR_SUCCESS);
+        bookBtn.setPreferredSize(new Dimension(120, 40));
+        bookBtn.addActionListener(e -> performBooking());
+
+        bottomPanel.add(refreshBtn);
+        bottomPanel.add(bookBtn);
+        add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    // 加载/刷新表格数据 (带筛选逻辑)
-    private void loadCourseData() {
-        tableModel.setRowCount(0); // 清空
+    private void loadCourses() {
+        tableModel.setRowCount(0);
+        String keyword = searchField.getText().trim();
+        List<Course> courses = courseService.getAvailableCourses(); // 获取可用课程
 
-        // 获取筛选日期
-        Date filterDate = dateChooser.getDate();
-        String filterDateStr = (filterDate != null) ? DateUtils.formatDate(filterDate) : null;
-
-        // 获取所有课程
-        List<Course> courses = courseService.getAllCourses();
-
-        for (Course course : courses) {
-            // --- 【新增】筛选逻辑 ---
-            if (filterDateStr != null) {
-                // 如果选了日期，检查课程日期是否匹配
-                // 使用 DateUtils.formatDate 只比较 "yyyy-MM-dd" 部分，忽略时分秒
-                String courseDateStr = DateUtils.formatDate(course.getCourseTime());
-                if (!filterDateStr.equals(courseDateStr)) {
-                    continue; // 日期不匹配，跳过
-                }
+        // 简单的内存搜索过滤（如果Service没有search方法的话）
+        for (Course c : courses) {
+            // 如果有关键字且课程名不包含关键字，则跳过
+            if (!keyword.isEmpty() && !c.getName().contains(keyword)) {
+                continue;
             }
-            // -----------------------
 
-            CourseDetail detail = courseService.getCourseDetail(course.getCourseId());
-            String timeStr = DateUtils.formatDateTime(course.getCourseTime());
+            // 获取详情以拿到教练名和剩余名额（利用 CourseService 中已有的 getCourseDetail 方法）
+            // CourseService.java 中的 getCourseDetail 方法
+            service.CourseService.CourseDetail detail = courseService.getCourseDetail(c.getCourseId());
 
-            Object[] rowData = {
-                    course.getCourseId(),
-                    course.getName(),
-                    timeStr, // 显示完整时间
-                    detail.getTypeDisplayName(),
-                    detail.getDurationFormatted(),
-                    detail.getTrainerName(),
-                    detail.getAvailableSlots(),
-                    detail.isFull() ? "已满" : "可预约"
-            };
-            tableModel.addRow(rowData);
-        }
+            String trainerName = "未知";
+            int availableSlots = 0;
 
-        // 如果筛选后没有数据，给个提示（可选）
-        if (tableModel.getRowCount() == 0 && filterDateStr != null) {
-            // 这里就不弹窗了，否则体验不好，列表空着就行
+            if (detail != null) {
+                trainerName = detail.getTrainerName();
+                availableSlots = detail.getAvailableSlots();
+            }
+
+            tableModel.addRow(new Object[]{
+                    c.getCourseId(),
+                    c.getName(),          // 修正为 getName()
+                    trainerName,          // 从 detail 获取教练名
+                    c.getCourseTime(),    // 修正为 getCourseTime()
+                    c.getDuration(),      // 修正为 getDuration()
+                    availableSlots,       // 从 detail 获取剩余名额
+                    "🟢 可预约"
+            });
         }
     }
 
-    // 执行预约逻辑
     private void performBooking() {
-        int selectedRow = courseTable.getSelectedRow();
-        if (selectedRow == -1) {
+        int row = courseTable.getSelectedRow();
+        if (row == -1) {
             JOptionPane.showMessageDialog(this, "请先选择一门课程！");
             return;
         }
 
-        int courseId = (int) tableModel.getValueAt(selectedRow, 0);
-        String courseName = (String) tableModel.getValueAt(selectedRow, 1);
-        String timeStr = (String) tableModel.getValueAt(selectedRow, 2); // 获取时间显示
+        int courseId = (int) tableModel.getValueAt(row, 0);
+        String courseName = (String) tableModel.getValueAt(row, 1);
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "确定要预约课程吗？\n\n课程：" + courseName + "\n时间：" + timeStr,
-                "确认预约", JOptionPane.YES_NO_OPTION);
+                "确定要预约课程 [" + courseName + "] 吗？", "预约确认", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // 调用 BookingService 进行预约 (这里用的是自动确认版，如果你改回了手动确认版请自行调整)
-            BookingService.ServiceResult result = bookingService.createAndConfirmBooking(member.getId(), courseId);
+            // 修正 1: 方法名改为 createAndConfirmBooking (这是 BookingService 里有的方法)
+            // 修正 2: 泛型改为 <?> 或 <entity.Booking>，因为返回值不是 Void
+            BookingService.ServiceResult<Booking> result = bookingService.createAndConfirmBooking(member.getId(), courseId);
 
             if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "预约成功！\n请在'我的预约'中查看详情。");
-                loadCourseData(); // 刷新列表（更新剩余名额）
+                JOptionPane.showMessageDialog(this, "🎉 预约成功！请准时参加。");
+
+                loadCourses(); // 刷新列表
             } else {
-                JOptionPane.showMessageDialog(this, "预约失败：\n" + result.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "预约失败：" + result.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             }
         }
+
+
     }
 }

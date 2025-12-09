@@ -1,91 +1,102 @@
 package Ui;
 
 import entity.Member;
+import utils.StyleUtils;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class InfoUi extends JFrame {
 
+    private Member member;
+
     public InfoUi(Member member) {
-        // 1. 窗口基本设置
-        this.setTitle("个人信息 - " + member.getName());
-        this.setSize(400, 500);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // 注意：这里用 DISPOSE，关闭时不退出整个程序
-        this.getContentPane().setLayout(null);
+        this.member = member;
+        StyleUtils.initGlobalTheme();
 
-        // 2. 初始化组件
-        initView(member);
+        setTitle("👤 个人档案");
+        setSize(400, 500);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(null);
 
-        this.setVisible(true);
+        initView();
     }
 
-    private void initView(Member member) {
-        int startY = 30;
-        int gap = 40;
-        int labelX = 50;
-        int valueX = 150;
+    private void initView() {
+        // 白色卡片背景
+        JPanel cardPanel = new JPanel(null);
+        cardPanel.setBounds(20, 20, 345, 420);
+        cardPanel.setBackground(Color.WHITE);
+        cardPanel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+        add(cardPanel);
 
-        // 标题
-        JLabel titleLabel = new JLabel("会员档案");
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 22));
-        titleLabel.setBounds(140, 20, 150, 30);
-        titleLabel.setForeground(new Color(50, 100, 200));
-        this.getContentPane().add(titleLabel);
+        // 头像区 (模拟)
+        JLabel avatarLbl = new JLabel("🤠", SwingConstants.CENTER);
+        avatarLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 60));
+        avatarLbl.setBounds(0, 30, 345, 80);
+        cardPanel.add(avatarLbl);
 
-        startY += 50;
+        JLabel nameLbl = new JLabel(member.getName(), SwingConstants.CENTER);
+        nameLbl.setFont(StyleUtils.FONT_TITLE);
+        nameLbl.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        nameLbl.setBounds(0, 110, 345, 30);
+        cardPanel.add(nameLbl);
 
-        // 姓名
-        addInfoItem("姓名：", member.getName(), startY);
+        JLabel idLbl = new JLabel("ID: " + member.getId(), SwingConstants.CENTER);
+        idLbl.setFont(StyleUtils.FONT_NORMAL);
+        idLbl.setForeground(StyleUtils.COLOR_INFO);
+        idLbl.setBounds(0, 140, 345, 20);
+        cardPanel.add(idLbl);
 
-        // 手机
-        addInfoItem("手机号：", member.getPhone(), startY + gap);
+        // 分割线
+        JSeparator sep = new JSeparator();
+        sep.setBounds(40, 170, 265, 1);
+        cardPanel.add(sep);
 
-        // 邮箱
-        addInfoItem("邮箱：", member.getEmail(), startY + gap * 2);
+        // 信息列表
+        int startY = 190;
+        int gap = 35;
 
-        // 性别
-        // 注意：数据库存的是 male/female，显示时最好转中文，也可以直接显示
-        String genderShow = "male".equals(member.getGender()) ? "男" : ("female".equals(member.getGender()) ? "女" : member.getGender());
-        addInfoItem("性别：", genderShow, startY + gap * 3);
+        addInfoRow(cardPanel, "📱 手机号:", member.getPhone(), startY);
+        addInfoRow(cardPanel, "📧 邮  箱:", member.getEmail(), startY + gap);
+        addInfoRow(cardPanel, "🚻 性  别:", "male".equals(member.getGender()) ? "男" : "女", startY + gap * 2);
 
-        // 生日 (需要处理日期格式，假设 member.getBirthDate() 返回 Date)
-        String birthStr = member.getBirthDate() != null ? member.getBirthDate().toString() : "未填写";
-        // 如果你有 DateUtils 工具类，可以用 DateUtils.format(member.getBirthDate())
-        addInfoItem("生日：", birthStr, startY + gap * 4);
+        // 余额高亮显示
+        JLabel balanceKey = new JLabel("💰 账户余额:");
+        balanceKey.setFont(StyleUtils.FONT_BOLD);
+        balanceKey.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        balanceKey.setBounds(50, startY + gap * 3, 100, 20);
+        cardPanel.add(balanceKey);
 
-        // 状态
-        addInfoItem("账号状态：", member.getStatus(), startY + gap * 5);
-
-        // 注册时间
-        String regStr = member.getRegisterDate() != null ? member.getRegisterDate().toString() : "";
-        addInfoItem("注册时间：", regStr, startY + gap * 6);
+        JLabel balanceVal = new JLabel("¥ " + member.getBalance());
+        balanceVal.setFont(new Font("Arial", Font.BOLD, 16));
+        balanceVal.setForeground(StyleUtils.COLOR_DANGER); // 红色金额
+        balanceVal.setHorizontalAlignment(SwingConstants.RIGHT);
+        balanceVal.setBounds(150, startY + gap * 3, 140, 20);
+        cardPanel.add(balanceVal);
 
         // 关闭按钮
         JButton closeBtn = new JButton("关闭");
-        closeBtn.setBounds(140, 400, 100, 35);
-        closeBtn.addActionListener(e -> this.dispose()); // Lambda写法，点击关闭当前窗口
-        this.getContentPane().add(closeBtn);
-
-        // 背景
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 400, 500);
-        bg.setBackground(new Color(240, 248, 255));
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
+        StyleUtils.styleButton(closeBtn, StyleUtils.COLOR_INFO);
+        closeBtn.setBounds(50, 360, 245, 40);
+        closeBtn.addActionListener(e -> dispose());
+        cardPanel.add(closeBtn);
     }
 
-    // 辅助方法：快速添加一行 "标签：值"
-    private void addInfoItem(String labelText, String valueText, int y) {
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        label.setBounds(50, y, 90, 30);
-        this.getContentPane().add(label);
+    private void addInfoRow(JPanel panel, String label, String value, int y) {
+        JLabel k = new JLabel(label);
+        k.setFont(StyleUtils.FONT_NORMAL);
+        k.setForeground(StyleUtils.COLOR_INFO);
+        k.setBounds(50, y, 100, 20);
+        panel.add(k);
 
-        JLabel value = new JLabel(valueText);
-        value.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        value.setBounds(140, y, 200, 30);
-        this.getContentPane().add(value);
+        JLabel v = new JLabel(value);
+        v.setFont(StyleUtils.FONT_BOLD);
+        v.setForeground(StyleUtils.COLOR_TEXT_MAIN);
+        v.setHorizontalAlignment(SwingConstants.RIGHT);
+        v.setBounds(150, y, 140, 20);
+        panel.add(v);
     }
 }

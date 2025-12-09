@@ -1,176 +1,157 @@
 package Ui;
 
+import dao.MemberDAO;
 import entity.Member;
-import service.MemberService;
-import service.MemberService.MemberDetail;
+import utils.StyleUtils; // 引入样式
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class MemberManageUi extends JFrame {
 
-    private MemberService memberService;
-
-    // 组件
-    private JTextField searchField;
+    private MemberDAO memberDAO;
     private JTable memberTable;
     private DefaultTableModel tableModel;
+    private JTextField searchField;
 
     public MemberManageUi() {
-        this.memberService = new MemberService();
+        this.memberDAO = new MemberDAO();
 
-        this.setTitle("会员管理中心");
-        this.setSize(900, 600);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        this.getContentPane().setLayout(null);
+        // 1. 基础设置
+        StyleUtils.initGlobalTheme(); // 确保主题一致
+        setTitle("👥 会员档案管理");
+        setSize(1000, 600);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(StyleUtils.COLOR_BG);
+        setLayout(new BorderLayout(10, 10));
 
         initView();
-        loadData(null); // 初始加载所有数据
-
-        this.setVisible(true);
+        loadData();
+        setVisible(true);
     }
 
     private void initView() {
-        // 1. 顶部搜索区
-        JLabel searchLabel = new JLabel("搜索会员(姓名/手机):");
-        searchLabel.setBounds(30, 20, 150, 30);
-        this.getContentPane().add(searchLabel);
+        // === 顶部工具栏 (白色背景，带阴影感) ===
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        toolBar.setBackground(Color.WHITE);
+        toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)));
+        add(toolBar, BorderLayout.NORTH);
 
-        searchField = new JTextField();
-        searchField.setBounds(160, 20, 200, 30);
-        this.getContentPane().add(searchField);
+        // 搜索框
+        JLabel searchLbl = new JLabel("🔍 搜索:");
+        searchLbl.setFont(StyleUtils.FONT_NORMAL);
+        toolBar.add(searchLbl);
+
+        searchField = new JTextField(15);
+        StyleUtils.styleTextField(searchField);
+        toolBar.add(searchField);
 
         JButton searchBtn = new JButton("查询");
-        searchBtn.setBounds(370, 20, 80, 30);
-        searchBtn.addActionListener(e -> loadData(searchField.getText().trim()));
-        this.getContentPane().add(searchBtn);
+        StyleUtils.styleButton(searchBtn, StyleUtils.COLOR_PRIMARY);
+        searchBtn.addActionListener(e -> searchMember());
+        toolBar.add(searchBtn);
 
-        // 2. 数据表格
-        String[] columns = {"ID", "姓名", "手机号", "性别", "注册日期", "当前状态", "会员卡情况"};
+        JButton refreshBtn = new JButton("🔄 刷新");
+        StyleUtils.styleButton(refreshBtn, StyleUtils.COLOR_INFO);
+        refreshBtn.addActionListener(e -> loadData());
+        toolBar.add(refreshBtn);
+
+        // 分隔线
+        toolBar.add(new JSeparator(SwingConstants.VERTICAL));
+
+        // 操作按钮
+        JButton addBtn = new JButton("➕ 新增");
+        StyleUtils.styleButton(addBtn, StyleUtils.COLOR_SUCCESS);
+        // 这里只是演示，实际需要你链接到 AddMemberUi 或 RegisterUi
+        addBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "请使用前台主界面的[新会员开卡]功能"));
+        toolBar.add(addBtn);
+
+        JButton editBtn = new JButton("✏️ 编辑");
+        StyleUtils.styleButton(editBtn, StyleUtils.COLOR_WARNING);
+        editBtn.addActionListener(e -> editMember());
+        toolBar.add(editBtn);
+
+        JButton delBtn = new JButton("🗑️ 删除");
+        StyleUtils.styleButton(delBtn, StyleUtils.COLOR_DANGER);
+        delBtn.addActionListener(e -> deleteMember());
+        toolBar.add(delBtn);
+
+        // === 中间表格区域 ===
+        // 表头
+        String[] columns = {"ID", "姓名", "手机号", "性别", "注册时间", "状态", "余额(¥)"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // 禁止编辑
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
 
         memberTable = new JTable(tableModel);
-        memberTable.setRowHeight(25);
-        memberTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        StyleUtils.styleTable(memberTable); // 应用美化样式
 
+        // 滚动条包裹（去掉默认边框，更现代）
         JScrollPane scrollPane = new JScrollPane(memberTable);
-        scrollPane.setBounds(30, 70, 820, 400);
-        this.getContentPane().add(scrollPane);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // 表格四周留白
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        add(scrollPane, BorderLayout.CENTER);
+    }
 
-        // 3. 底部操作按钮
-        JButton freezeBtn = new JButton("冻结/解冻会员");
-        freezeBtn.setBounds(30, 490, 150, 40);
-        freezeBtn.setBackground(new Color(255, 200, 100)); // 橙色
-        freezeBtn.addActionListener(e -> toggleMemberStatus());
-        this.getContentPane().add(freezeBtn);
+    private void loadData() {
+        tableModel.setRowCount(0);
+        List<Member> members = memberDAO.getAllMembers();
+        for (Member m : members) {
+            addMemberToTable(m);
+        }
+    }
 
-        JButton refreshBtn = new JButton("刷新列表");
-        refreshBtn.setBounds(750, 490, 100, 40);
-        refreshBtn.addActionListener(e -> {
-            searchField.setText("");
-            loadData(null);
+    private void searchMember() {
+        String keyword = searchField.getText().trim();
+        tableModel.setRowCount(0);
+        List<Member> members = memberDAO.searchMembersByName(keyword);
+        for (Member m : members) {
+            addMemberToTable(m);
+        }
+    }
+
+    private void addMemberToTable(Member m) {
+        tableModel.addRow(new Object[]{
+                m.getId(), m.getName(), m.getPhone(), m.getGender(),
+                m.getRegisterDate(), m.getStatus(), m.getBalance()
         });
-        this.getContentPane().add(refreshBtn);
-
-        // 背景
-        JLabel bg = new JLabel();
-        bg.setBounds(0, 0, 900, 600);
-        bg.setBackground(new Color(240, 245, 240)); // 浅绿色调
-        bg.setOpaque(true);
-        this.getContentPane().add(bg);
     }
 
-    // 加载数据
-    private void loadData(String keyword) {
-        tableModel.setRowCount(0); // 清空
-        List<Member> list;
-
-        if (keyword == null || keyword.isEmpty()) {
-            list = memberService.getAllMembers();
-        } else {
-            list = memberService.search(keyword);
-        }
-
-        for (Member m : list) {
-            // 获取详情以查看会员卡状态
-            MemberDetail detail = memberService.getMemberDetail(m.getId());
-            String cardStatus = "无有效卡";
-            if (detail != null && detail.isHasValidCard()) {
-                cardStatus = detail.getActiveCard().getCardType() + " (剩余" + detail.getCardRemainingDays() + "天)";
-            }
-
-            // 状态转中文
-            String status = m.getStatus();
-            if ("active".equals(status)) status = "正常";
-            else if ("frozen".equals(status)) status = "已冻结";
-            else if ("inactive".equals(status)) status = "已注销";
-
-            Object[] row = {
-                    m.getId(),
-                    m.getName(),
-                    m.getPhone(),
-                    "male".equals(m.getGender()) ? "男" : "女",
-                    m.getRegisterDate(),
-                    status,
-                    cardStatus
-            };
-            tableModel.addRow(row);
-        }
-    }
-
-    // 切换状态操作
-    private void toggleMemberStatus() {
+    private void deleteMember() {
         int row = memberTable.getSelectedRow();
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "请先选择一位会员");
+            JOptionPane.showMessageDialog(this, "请先选择要删除的会员！");
             return;
         }
-
-        int memberId = (int) tableModel.getValueAt(row, 0);
+        int id = (int) tableModel.getValueAt(row, 0);
         String name = (String) tableModel.getValueAt(row, 1);
-        String currentStatusStr = (String) tableModel.getValueAt(row, 5); // "正常" 或 "已冻结"
 
-        // 如果是正常 -> 冻结
-        if ("正常".equals(currentStatusStr)) {
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "确定要冻结会员 [" + name + "] 吗？\n冻结后该会员将无法登录、预约或进场。",
-                    "确认冻结", JOptionPane.YES_NO_OPTION);
+        int opt = JOptionPane.showConfirmDialog(this,
+                "确定要删除会员 [" + name + "] 吗？\n此操作不可恢复！", "确认删除", JOptionPane.YES_NO_OPTION);
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                MemberService.ServiceResult<Void> result = memberService.freezeMember(memberId, "管理员操作");
-                if (result.isSuccess()) {
-                    JOptionPane.showMessageDialog(this, "会员已冻结");
-                    loadData(null);
-                } else {
-                    JOptionPane.showMessageDialog(this, "操作失败：" + result.getMessage());
-                }
+        if (opt == JOptionPane.YES_OPTION) {
+            if (memberDAO.deleteMember(id)) {
+                JOptionPane.showMessageDialog(this, "删除成功");
+                loadData();
+            } else {
+                JOptionPane.showMessageDialog(this, "删除失败，可能存在关联数据");
             }
         }
-        // 如果是已冻结 -> 解冻
-        else if ("已冻结".equals(currentStatusStr)) {
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "确定要激活/解冻会员 [" + name + "] 吗？",
-                    "确认解冻", JOptionPane.YES_NO_OPTION);
+    }
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                MemberService.ServiceResult<Void> result = memberService.activateMember(memberId);
-                if (result.isSuccess()) {
-                    JOptionPane.showMessageDialog(this, "会员已恢复正常");
-                    loadData(null);
-                } else {
-                    JOptionPane.showMessageDialog(this, "操作失败：" + result.getMessage());
-                }
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "该会员状态不支持此操作（可能是已注销）");
+    private void editMember() {
+        int row = memberTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "请选择要编辑的会员");
+            return;
         }
+        // 这里可以弹出一个简单的编辑对话框，或者复用 InfoUi 修改版
+        JOptionPane.showMessageDialog(this, "编辑功能需单独实现 EditMemberUi");
     }
 }
