@@ -3,7 +3,7 @@ package Ui;
 import entity.Product;
 import service.ProductService;
 import service.ShopService;
-import service.ServiceResult; // 确保导入 Result
+import service.ServiceResult;
 import utils.StyleUtils;
 
 import javax.swing.*;
@@ -28,7 +28,7 @@ public class ShopUi extends JFrame {
 
     // 购物车数据：ID -> 数量
     private Map<Integer, Integer> shoppingCart = new HashMap<>();
-    // 缓存商品数据：ID -> Product
+    // 缓存商品数据：ID -> Product (用于快速查找价格等信息)
     private Map<Integer, Product> productCache = new HashMap<>();
 
     public ShopUi() {
@@ -44,12 +44,12 @@ public class ShopUi extends JFrame {
         setLayout(new BorderLayout(10, 10));
 
         initView();
-        loadProducts();
+        loadProducts(); // 初始化时加载所有商品
         setVisible(true);
     }
 
     private void initView() {
-        // === 左侧：商品区 ===
+        // === 左侧：商品区 (70%) ===
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBackground(Color.WHITE);
         leftPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -59,13 +59,25 @@ public class ShopUi extends JFrame {
         searchPanel.setBackground(Color.WHITE);
         searchField = new JTextField(15);
         StyleUtils.styleTextField(searchField);
+        // 允许回车搜索
+        searchField.addActionListener(e -> loadProducts());
+
         JButton searchBtn = new JButton("🔍 搜索商品");
         StyleUtils.styleButton(searchBtn, StyleUtils.COLOR_PRIMARY);
         searchBtn.addActionListener(e -> loadProducts());
 
+        // 刷新/显示全部按钮
+        JButton showAllBtn = new JButton("🔄 显示全部");
+        StyleUtils.styleButton(showAllBtn, StyleUtils.COLOR_INFO);
+        showAllBtn.addActionListener(e -> {
+            searchField.setText("");
+            loadProducts();
+        });
+
         searchPanel.add(new JLabel("商品名称:"));
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
+        searchPanel.add(showAllBtn);
         leftPanel.add(searchPanel, BorderLayout.NORTH);
 
         // 商品表格
@@ -93,7 +105,7 @@ public class ShopUi extends JFrame {
         tipLabel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
         leftPanel.add(tipLabel, BorderLayout.SOUTH);
 
-        // === 右侧：购物车区 ===
+        // === 右侧：购物车区 (30%) ===
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setPreferredSize(new Dimension(350, 0));
         rightPanel.setBackground(Color.WHITE);
@@ -152,7 +164,6 @@ public class ShopUi extends JFrame {
         rightPanel.add(checkoutPanel, BorderLayout.SOUTH);
 
         // === 添加到主窗口 ===
-        // 使用 SplitPane 分割左右，虽然 BorderLayout 也可以，但 SplitPane 可调整大小
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
         splitPane.setResizeWeight(0.7); // 左侧占70%
         splitPane.setDividerSize(5);
@@ -161,15 +172,25 @@ public class ShopUi extends JFrame {
         add(splitPane, BorderLayout.CENTER);
     }
 
-    // --- 业务逻辑 (保持原有逻辑框架，适配新UI) ---
+    // ================= 核心逻辑方法 =================
 
+    /**
+     * 加载商品列表 (修复：支持显示所有商品)
+     */
     private void loadProducts() {
         productModel.setRowCount(0);
         productCache.clear();
 
         String keyword = searchField.getText().trim();
-        List<Product> products = productService.searchProducts(keyword); // 需要ProductService支持search
-        // 如果ProductService没有search，就用getAll然后过滤，或者用DAO
+        List<Product> products;
+
+        // >>> 核心修复 <<<
+        // 如果搜索框为空，加载所有商品；如果不为空，执行搜索
+        if (keyword.isEmpty()) {
+            products = productService.getAllProducts();
+        } else {
+            products = productService.searchProducts(keyword);
+        }
 
         for (Product p : products) {
             productCache.put(p.getProductId(), p);
@@ -191,8 +212,15 @@ public class ShopUi extends JFrame {
             return;
         }
 
+        // 检查购物车内数量是否超库存
+        int currentQty = shoppingCart.getOrDefault(pId, 0);
+        if (currentQty >= p.getStock()) {
+            JOptionPane.showMessageDialog(this, "库存不足！(购物车已达上限)");
+            return;
+        }
+
         // 数量+1
-        shoppingCart.put(pId, shoppingCart.getOrDefault(pId, 0) + 1);
+        shoppingCart.put(pId, currentQty + 1);
         updateCartView();
     }
 
@@ -202,6 +230,9 @@ public class ShopUi extends JFrame {
 
         for (Map.Entry<Integer, Integer> entry : shoppingCart.entrySet()) {
             Product p = productCache.get(entry.getKey());
+            // 防止商品被删除后缓存失效 (虽然一般不会)
+            if (p == null) continue;
+
             int qty = entry.getValue();
             double subtotal = p.getPrice() * qty;
             total += subtotal;
@@ -218,12 +249,31 @@ public class ShopUi extends JFrame {
 
     private void removeFromCart() {
         int row = cartTable.getSelectedRow();
-        if (row == -1) return;
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "请选择要删除的行");
+            return;
+        }
 
         // 这里的逻辑稍微复杂，因为Table只显示了名字，没存ID
-        // 简单做法：重新匹配名字，或者在TableModel里存对象
-        // 这里为了简化，清空重选
-        JOptionPane.showMessageDialog(this, "暂不支持单项删除，请点击清空重选");
+        // 简单做法：为了匹配Map，我们得知道这一行对应哪个ID
+        // 更好的做法是 cartModel 存对象，或者重新遍历。
+        // 这里采用【清空重选】策略提示用户，或者你可以增强 cartModel
+
+        // 增强方案：遍历 map 找到对应名字的 key (假设名字不重复，或者简单点直接全清空)
+        // 为了用户体验，我们这里简单移除选中的那一行对应的内存数据
+        String pName = (String) cartModel.getValueAt(row, 0);
+        Integer targetId = null;
+        for (Map.Entry<Integer, Product> entry : productCache.entrySet()) {
+            if (entry.getValue().getName().equals(pName)) {
+                targetId = entry.getKey();
+                break;
+            }
+        }
+
+        if (targetId != null) {
+            shoppingCart.remove(targetId);
+            updateCartView();
+        }
     }
 
     private void performCheckout() {
@@ -242,7 +292,7 @@ public class ShopUi extends JFrame {
             if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "✅ " + result.getMessage());
                 clearCart();
-                loadProducts(); // 刷新库存
+                loadProducts(); // 刷新库存显示
             } else {
                 JOptionPane.showMessageDialog(this, "❌ " + result.getMessage());
             }

@@ -3,11 +3,11 @@ package Ui;
 import dao.EmployeeRoleDAO;
 import entity.Employee;
 import entity.Member;
-import utils.StyleUtils; // 引入样式
+import utils.StyleUtils; // 确保引入了样式工具类
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter; // 使用Adapter简化
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class MainUi extends JFrame {
@@ -19,14 +19,15 @@ public class MainUi extends JFrame {
         this.userType = userType;
         this.userData = userData;
 
-        // 确保主题已应用
+        // 1. 初始化全局皮肤
         StyleUtils.initGlobalTheme();
 
         initView();
     }
 
     private void initView() {
-        this.setSize(1000, 720); // 加宽加高
+        // 窗口设置 (稍微加高一点以适应分区)
+        this.setSize(1000, 750);
         this.setTitle("💪 健身房智能管理系统 Pro");
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -39,7 +40,7 @@ public class MainUi extends JFrame {
         header.setBackground(Color.WHITE);
         this.getContentPane().add(header);
 
-        // Logo/Title
+        // Logo
         JLabel logo = new JLabel("🏋️ Gym System");
         logo.setFont(StyleUtils.FONT_TITLE_BIG);
         logo.setForeground(StyleUtils.COLOR_PRIMARY);
@@ -87,37 +88,11 @@ public class MainUi extends JFrame {
         this.setVisible(true);
     }
 
-    // 辅助方法：快速创建美观的菜单按钮
-    private void createMenuBtn(String text, String icon, Color color, int x, int y, Runnable action) {
-        // 使用 HTML 实现 图标在上，文字在下 的效果
-        String html = "<html><center><font size='5'>" + icon + "</font><br>" + text + "</center></html>";
-        JButton btn = new JButton(html);
-
-        btn.setBounds(x, y, 180, 90); // 统一大小
-        StyleUtils.styleButton(btn, color);
-
-        // 增加鼠标悬停变色效果
-        btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(color.darker()); }
-            public void mouseExited(MouseEvent e) { btn.setBackground(color); }
-        });
-
-        btn.addActionListener(e -> action.run());
-        this.getContentPane().add(btn);
-    }
-
-    private void addSectionTitle(String title, int x, int y) {
-        JLabel lbl = new JLabel(title);
-        lbl.setFont(StyleUtils.FONT_BOLD);
-        lbl.setForeground(StyleUtils.COLOR_INFO);
-        lbl.setBounds(x, y, 200, 30);
-        this.getContentPane().add(lbl);
-    }
-
+    // ==================== 1. 会员菜单 ====================
     private void loadMemberMenu() {
         int startX = 100;
         int startY = 120;
-        int gap = 200; // 横向间距
+        int gap = 200;
 
         addSectionTitle("我的服务", startX, startY - 30);
 
@@ -142,59 +117,68 @@ public class MainUi extends JFrame {
         });
     }
 
+    // ==================== 2. 员工菜单 (布局优化版) ====================
     private void loadEmployeeMenu() {
         if (!(userData instanceof Employee)) return;
         Employee emp = (Employee) userData;
         int roleId = emp.getRoleId();
 
         int x = 80;
-        int y = 130;
-        int w = 200; // 这里的宽度用于计算间距，按钮实际宽度在 createMenuBtn 定义
-        int h = 110; // 纵向间距
+        int y = 140;
+        int w = 200; // 按钮宽度
+        int h = 100; // 按钮高度 (加大)
+        int gapX = 50;
+        int gapY = 60; // 行间距
 
+        // --- 教练权限 ---
         if (roleId == EmployeeRoleDAO.ROLE_ID_TRAINER) {
-            addSectionTitle("教练工作台", x, y - 30);
+            addSectionTitle("🏋️ 教练工作台", x, y - 30);
             createMenuBtn("上课点名", "📝", StyleUtils.COLOR_PRIMARY, x, y,
                     () -> new Ui.CourseAttendanceUi((Employee) userData));
+        }
 
-        } else if (roleId == EmployeeRoleDAO.ROLE_ID_RECEPTIONIST) {
-            addSectionTitle("前台日常运营", x, y - 30);
+        // --- 前台权限 (重点优化) ---
+        else if (roleId == EmployeeRoleDAO.ROLE_ID_RECEPTIONIST) {
 
-            // 第一排
+            // 第一排：高频业务 (签到、收银、充值)
+            addSectionTitle("🔥 前台高频业务", x, y - 30);
             createMenuBtn("进场签到", "✅", StyleUtils.COLOR_PRIMARY, x, y, () -> new CheckInUi());
-            createMenuBtn("排课管理", "📅", StyleUtils.COLOR_PRIMARY, x + w, y, () -> new Ui.CourseManageUi((Employee) userData));
-            createMenuBtn("会员管理", "👥", StyleUtils.COLOR_PRIMARY, x + w * 2, y, () -> new Ui.MemberManageUi());
+            createMenuBtn("商品售卖", "🛒", StyleUtils.COLOR_WARNING, x + w + gapX, y, () -> new ShopUi());
+            createMenuBtn("余额充值", "💰", StyleUtils.COLOR_SUCCESS, x + (w + gapX) * 2, y, () -> new RechargeUi());
 
-            // 第二排：收银
-            int y2 = y + h + 20;
-            addSectionTitle("收银与会籍", x, y2 - 30);
-            createMenuBtn("商品售卖", "🛒", StyleUtils.COLOR_WARNING, x, y2, () -> new ShopUi());
-            createMenuBtn("余额充值", "💰", StyleUtils.COLOR_SUCCESS, x + w, y2, () -> new RechargeUi());
-            createMenuBtn("库存管理", "📦", StyleUtils.COLOR_INFO, x + w * 2, y2, () -> new ProductManageUi());
+            // 第二排：会籍服务 (会员、开卡、续费)
+            int y2 = y + h + gapY;
+            addSectionTitle("👥 会籍与会员服务", x, y2 - 30);
+            createMenuBtn("会员管理", "📂", StyleUtils.COLOR_INFO, x, y2, () -> new Ui.MemberManageUi());
+            createMenuBtn("新会员开卡", "🆕", StyleUtils.COLOR_DANGER, x + w + gapX, y2, () -> handleStaffCardAction("buy"));
+            createMenuBtn("会员续费", "🔄", StyleUtils.COLOR_DANGER, x + (w + gapX) * 2, y2, () -> handleStaffCardAction("renew"));
 
-            // 第三排
-            int y3 = y2 + h + 20;
-            createMenuBtn("新会员开卡", "🆕", StyleUtils.COLOR_DANGER, x, y3, () -> handleStaffCardAction("buy"));
-            createMenuBtn("会员续费", "🔄", StyleUtils.COLOR_DANGER, x + w, y3, () -> handleStaffCardAction("renew"));
+            // 第三排：后台管理 (排课、库存)
+            int y3 = y2 + h + gapY;
+            addSectionTitle("📦 后台管理", x, y3 - 30);
+            createMenuBtn("排课管理", "📅", StyleUtils.COLOR_INFO, x, y3, () -> new Ui.CourseManageUi((Employee) userData));
+            createMenuBtn("库存管理", "📊", StyleUtils.COLOR_INFO, x + w + gapX, y3, () -> new ProductManageUi());
+        }
 
-        } else if (roleId == EmployeeRoleDAO.ROLE_ID_ADMIN) {
-            addSectionTitle("全能管理控制台", x, y - 30);
+        // --- 管理员权限 ---
+        else if (roleId == EmployeeRoleDAO.ROLE_ID_ADMIN) {
+            addSectionTitle("🛡️ 综合管理控制台", x, y - 30);
 
-            // 第一排：基础
+            // 第一排：基础运营
             createMenuBtn("进场签到", "✅", StyleUtils.COLOR_PRIMARY, x, y, () -> new CheckInUi());
-            createMenuBtn("排课管理", "📅", StyleUtils.COLOR_PRIMARY, x + w, y, () -> new Ui.CourseManageUi((Employee) userData));
-            createMenuBtn("会员管理", "👥", StyleUtils.COLOR_PRIMARY, x + w * 2, y, () -> new Ui.MemberManageUi());
-            createMenuBtn("员工/人事", "👔", StyleUtils.COLOR_DANGER, x + w * 3, y, () -> new Ui.EmployeeManageUi());
+            createMenuBtn("排课管理", "📅", StyleUtils.COLOR_PRIMARY, x + w + gapX, y, () -> new Ui.CourseManageUi((Employee) userData));
+            createMenuBtn("会员管理", "👥", StyleUtils.COLOR_PRIMARY, x + (w + gapX) * 2, y, () -> new Ui.MemberManageUi());
+            createMenuBtn("员工/人事", "👔", StyleUtils.COLOR_DANGER, x + (w + gapX) * 3, y, () -> new Ui.EmployeeManageUi());
 
-            // 第二排：业务
-            int y2 = y + h + 20;
+            // 第二排：业务与收银
+            int y2 = y + h + gapY;
             createMenuBtn("上课点名", "📝", StyleUtils.COLOR_INFO, x, y2, () -> new Ui.CourseAttendanceUi((Employee) userData));
-            createMenuBtn("库存管理", "📦", StyleUtils.COLOR_WARNING, x + w, y2, () -> new ProductManageUi());
-            createMenuBtn("商品售卖", "🛒", StyleUtils.COLOR_SUCCESS, x + w * 2, y2, () -> new ShopUi());
-            createMenuBtn("余额充值", "💰", StyleUtils.COLOR_SUCCESS, x + w * 3, y2, () -> new RechargeUi());
+            createMenuBtn("库存管理", "📦", StyleUtils.COLOR_WARNING, x + w + gapX, y2, () -> new ProductManageUi());
+            createMenuBtn("商品售卖", "🛒", StyleUtils.COLOR_SUCCESS, x + (w + gapX) * 2, y2, () -> new ShopUi());
+            createMenuBtn("余额充值", "💰", StyleUtils.COLOR_SUCCESS, x + (w + gapX) * 3, y2, () -> new RechargeUi());
 
             // 第三排：决策与高级
-            int y3 = y2 + h + 20;
+            int y3 = y2 + h + gapY;
             createMenuBtn("开卡/续费", "💳", StyleUtils.COLOR_DANGER, x, y3, () -> {
                 String[] options = {"新会员开卡", "老会员续费"};
                 int choice = JOptionPane.showOptionDialog(this, "请选择业务类型:", "会籍业务",
@@ -203,11 +187,39 @@ public class MainUi extends JFrame {
                 if (choice == 1) handleStaffCardAction("renew");
             });
 
-            createMenuBtn("经营报表", "📊", new Color(100, 100, 255), x + w, y3, () -> new ReportUi());
+            createMenuBtn("经营报表", "📊", new Color(100, 100, 255), x + w + gapX, y3, () -> new ReportUi());
         }
     }
 
-    // 搜索逻辑保持不变，直接复用你之前的代码
+    // ==================== 辅助方法 ====================
+
+    private void createMenuBtn(String text, String icon, Color color, int x, int y, Runnable action) {
+        // 使用 HTML 实现图标在上，文字在下
+        String html = "<html><center><font size='6'>" + icon + "</font><br><font size='4'>" + text + "</font></center></html>";
+        JButton btn = new JButton(html);
+
+        btn.setBounds(x, y, 180, 90); // 统一大按钮
+        StyleUtils.styleButton(btn, color);
+
+        // 悬停变色
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btn.setBackground(color.darker()); }
+            public void mouseExited(MouseEvent e) { btn.setBackground(color); }
+        });
+
+        btn.addActionListener(e -> action.run());
+        this.getContentPane().add(btn);
+    }
+
+    private void addSectionTitle(String title, int x, int y) {
+        JLabel lbl = new JLabel(title);
+        lbl.setFont(StyleUtils.FONT_BOLD);
+        lbl.setForeground(Color.GRAY);
+        lbl.setBounds(x, y, 300, 30);
+        this.getContentPane().add(lbl);
+    }
+
+    // 员工开卡/续费辅助逻辑
     private void handleStaffCardAction(String actionType) {
         String input = JOptionPane.showInputDialog(this, "请输入会员手机号或ID:");
         if (input == null || input.trim().isEmpty()) return;
@@ -231,8 +243,4 @@ public class MainUi extends JFrame {
             new RenewUi(this, targetMember, true);
         }
     }
-
-    // MainUi 不需要实现 MouseListener 了，因为我们用了 Lambda 表达式和 Adapter
-    // 所以把 implements MouseListener 去掉，或者保留空实现也行
-
 }

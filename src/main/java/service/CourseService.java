@@ -158,6 +158,22 @@ public class CourseService {
 
     // ==================== 课程信息管理 ====================
 
+    // ==================== 补充：通用课程更新 ====================
+
+    /**
+     * 更新课程所有信息 (用于编辑模式)
+     * @param course 包含最新信息的课程对象
+     * @return 是否更新成功
+     */
+    public boolean updateCourse(Course course) {
+        if (course == null) {
+            return false;
+        }
+        // 调用 DAO 层进行全字段更新
+        return courseDAO.updateCourse(course);
+    }
+
+
     /**
      * 更新课程基本信息
      *

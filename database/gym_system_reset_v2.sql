@@ -33,7 +33,7 @@ CREATE TABLE `booking` (
   KEY `course_id` (`course_id`),
   CONSTRAINT `booking_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
   CONSTRAINT `booking_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='预约表：存储会员对课程的预约记录';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='预约表：存储会员对课程的预约记录';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,7 +42,6 @@ CREATE TABLE `booking` (
 
 LOCK TABLES `booking` WRITE;
 /*!40000 ALTER TABLE `booking` DISABLE KEYS */;
-INSERT INTO `booking` VALUES (1,1,1,'2025-12-02 10:00:00','cancelled'),(2,2,3,'2025-12-02 14:00:00','confirmed'),(3,3,4,'2025-12-03 09:00:00','confirmed'),(4,4,5,'2025-12-03 16:00:00','confirmed'),(5,6,1,'2025-12-02 10:00:00','confirmed'),(6,7,6,'2025-12-04 15:00:00','confirmed'),(7,9,7,'2025-12-02 07:00:00','confirmed'),(8,10,2,'2025-12-05 11:00:00','confirmed'),(9,1,3,'2025-12-06 14:00:00','confirmed'),(10,2,1,'2025-12-07 10:00:00','cancelled');
 /*!40000 ALTER TABLE `booking` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -83,7 +82,7 @@ CREATE TABLE `check_in` (
   PRIMARY KEY (`checkin_id`),
   KEY `member_id` (`member_id`),
   CONSTRAINT `check_in_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='打卡表：记录会员的签到签退信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='打卡表：记录会员的签到签退信息';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -92,7 +91,6 @@ CREATE TABLE `check_in` (
 
 LOCK TABLES `check_in` WRITE;
 /*!40000 ALTER TABLE `check_in` DISABLE KEYS */;
-INSERT INTO `check_in` VALUES (1,1,'2025-11-25 08:30:00','2025-11-25 10:15:00'),(2,2,'2025-11-25 09:00:00','2025-11-25 10:30:00'),(3,3,'2025-11-25 14:00:00','2025-11-25 16:00:00'),(4,1,'2025-11-26 08:45:00','2025-11-26 10:30:00'),(5,4,'2025-11-26 15:30:00','2025-11-26 17:00:00'),(6,6,'2025-11-27 09:15:00','2025-11-27 11:00:00'),(7,7,'2025-11-27 16:00:00','2025-11-27 18:30:00'),(8,1,'2025-11-28 08:30:00','2025-11-28 10:00:00'),(9,2,'2025-11-28 14:30:00','2025-11-28 16:15:00'),(10,9,'2025-11-28 10:00:00','2025-11-28 12:00:00'),(11,10,'2025-11-29 09:00:00','2025-11-29 11:30:00'),(12,1,'2025-11-29 18:00:00','2025-11-29 20:00:00'),(13,3,'2025-11-29 15:00:00','2025-11-29 17:00:00'),(14,6,'2025-11-30 08:00:00','2025-11-30 09:45:00'),(15,7,'2025-11-30 16:30:00','2025-11-30 18:00:00'),(16,1,'2025-12-01 08:30:00','2025-12-04 13:34:59'),(17,2,'2025-12-01 09:15:00','2025-12-01 10:45:00'),(18,4,'2025-12-01 14:00:00','2025-12-04 13:34:59');
 /*!40000 ALTER TABLE `check_in` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -114,7 +112,7 @@ CREATE TABLE `course` (
   PRIMARY KEY (`course_id`),
   KEY `employee_id` (`employee_id`),
   CONSTRAINT `course_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`employee_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='课程表：存储健身房提供的课程信息及对应教练';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='课程表：存储健身房提供的课程信息及对应教练';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,7 +121,7 @@ CREATE TABLE `course` (
 
 LOCK TABLES `course` WRITE;
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
-INSERT INTO `course` VALUES (1,'瑜伽基础班','yoga',60,15,1,NULL),(2,'高级瑜伽','yoga',90,12,1,NULL),(3,'动感单车','spinning',45,20,2,NULL),(4,'普拉提塑形','pilates',60,15,3,NULL),(5,'有氧健身操','aerobics',50,25,2,NULL),(6,'力量训练','strength',60,10,6,NULL),(7,'晨练瑜伽','yoga',45,20,1,NULL),(8,'晚间放松','yoga',60,15,3,NULL),(10,'测试课程','yoga',60,20,1,NULL),(16,'轻松瑜伽','yoga',60,10,1,'2025-12-09 02:00:00');
+INSERT INTO `course` VALUES (1,'晨间瑜伽','yoga',60,10,3,'2025-12-14 18:43:42'),(2,'高强度燃脂','aerobics',45,15,3,'2025-12-15 18:43:42'),(3,'普拉提进阶','pilates',60,8,3,'2025-12-16 18:43:42');
 /*!40000 ALTER TABLE `course` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -181,7 +179,7 @@ CREATE TABLE `employee` (
   PRIMARY KEY (`employee_id`),
   KEY `role_id` (`role_id`),
   CONSTRAINT `employee_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `employee_role` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=133 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='员工表：存储健身房员工信息，包括教练、前台和管理员';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='员工表：存储健身房员工信息，包括教练、前台和管理员';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -190,7 +188,7 @@ CREATE TABLE `employee` (
 
 LOCK TABLES `employee` WRITE;
 /*!40000 ALTER TABLE `employee` DISABLE KEYS */;
-INSERT INTO `employee` VALUES (1,'张教练',1,'13800001111','2023-01-15'),(2,'李教练',1,'13800002222','2023-03-20'),(3,'王教练',1,'13800003333','2023-06-10'),(4,'赵前台',2,'13800004444','2024-01-05'),(5,'刘管理员',3,'13800005555','2022-12-01'),(6,'陈教练',1,'13800006666','2024-02-14'),(7,'周前台',2,'13800007777','2024-03-01'),(14,'管理员01',3,'13800000001','2025-12-09'),(15,'强森教练',1,'13800000002','2025-12-09');
+INSERT INTO `employee` VALUES (1,'Admin',3,'1001','2023-01-01'),(2,'Alice(前台)',2,'1002','2023-05-01'),(3,'Bob(教练)',1,'1003','2023-06-01');
 /*!40000 ALTER TABLE `employee` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -216,7 +214,7 @@ CREATE TABLE `employee_role` (
 
 LOCK TABLES `employee_role` WRITE;
 /*!40000 ALTER TABLE `employee_role` DISABLE KEYS */;
-INSERT INTO `employee_role` VALUES (1,'Trainer','健身教练，负责课程教学','course_view,course_manage_own,booking_view_own,booking_confirm_own,member_view'),(2,'Receptionist','前台接待，负责会员登记','member_view,member_add,member_edit,card_view,card_add,card_renew,booking_view,booking_confirm,checkin_manage,order_view,order_create'),(3,'Admin','管理员，负责系统管理','member_view,member_add,member_edit,member_delete,card_view,card_add,card_renew,card_delete,course_view,course_add,course_edit,course_delete,booking_view,booking_confirm,checkin_manage,order_view,order_create,product_manage,employee_view,employee_add,employee_edit,employee_delete');
+INSERT INTO `employee_role` VALUES (1,'Trainer','健身教练','course'),(2,'Receptionist','前台','all'),(3,'Admin','管理员','all');
 /*!40000 ALTER TABLE `employee_role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -238,7 +236,7 @@ CREATE TABLE `member` (
   `status` enum('active','inactive','frozen') DEFAULT 'active',
   `balance` decimal(10,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`member_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='会员表：存储健身房会员的基本信息';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='会员表：存储健身房会员的基本信息';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -247,7 +245,7 @@ CREATE TABLE `member` (
 
 LOCK TABLES `member` WRITE;
 /*!40000 ALTER TABLE `member` DISABLE KEYS */;
-INSERT INTO `member` VALUES (1,'张三','13900001111','zhangsan@email.com','male','1995-05-15','2024-01-10 09:30:00','active',0.00),(2,'李四','13900002222','lisi@email.com','female','1998-08-20','2024-02-15 14:20:00','active',0.00),(3,'王五','13900003333','wangwu@email.com','male','1992-03-10','2024-03-05 10:15:00','active',0.00),(4,'赵六','13900004444','zhaoliu@email.com','female','2000-11-25','2024-04-12 16:45:00','active',0.00),(5,'孙七','13900005555','sunqi@email. com','male','1990-07-08','2024-05-20 11:30:00','frozen',0.00),(6,'周八','13900006666','zhouba@email.com','female','1996-12-30','2024-06-08 13:20:00','active',0.00),(7,'吴九','13900007777','wujiu@email.com','male','1994-09-18','2024-07-15 15:10:00','active',0.00),(8,'郑十','13900008888','zhengshi@email.com','female','1999-04-22','2024-08-01 09:00:00','inactive',0.00),(9,'刘一','13900009999','liuyi@email.com','male','1993-01-05','2024-09-10 10:45:00','active',0.00),(10,'陈二','13900000000','chener@email.com','female','1997-06-14','2024-10-05 14:30:00','active',0.00),(39,'xiaoning','16789009087','liu@email.com','male','2025-12-03','2025-12-09 01:27:04','active',100.00),(40,'jack','16789098907','liu2567@email.com','male','2025-02-04','2025-12-09 07:15:29','active',0.00);
+INSERT INTO `member` VALUES (1,'张三','13800138000',NULL,'male',NULL,NULL,'active',500.00);
 /*!40000 ALTER TABLE `member` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -297,7 +295,7 @@ CREATE TABLE `membership_card` (
   KEY `type_id` (`type_id`),
   CONSTRAINT `membership_card_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
   CONSTRAINT `membership_card_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `membership_type` (`type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='会员卡表：存储会员的会籍卡信息';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='会员卡表：存储会员的会籍卡信息';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -306,7 +304,7 @@ CREATE TABLE `membership_card` (
 
 LOCK TABLES `membership_card` WRITE;
 /*!40000 ALTER TABLE `membership_card` DISABLE KEYS */;
-INSERT INTO `membership_card` VALUES (1,1,2,'2024-01-10','2025-01-09','expired'),(2,2,1,'2024-11-15','2024-12-14','expired'),(3,3,2,'2024-03-05','2025-03-04','expired'),(4,4,1,'2024-11-12','2024-12-11','expired'),(5,5,2,'2024-05-20','2025-05-19','expired'),(6,6,1,'2024-11-08','2024-12-07','expired'),(7,7,2,'2024-07-15','2025-07-14','expired'),(8,8,1,'2024-08-01','2024-08-31','expired'),(9,9,1,'2024-11-10','2024-12-09','expired'),(10,10,2,'2024-10-05','2025-10-04','expired'),(52,39,1,'2025-12-09','2026-01-09','active');
+INSERT INTO `membership_card` VALUES (1,1,2,NULL,'2025-12-31','active');
 /*!40000 ALTER TABLE `membership_card` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -333,7 +331,7 @@ CREATE TABLE `membership_type` (
 
 LOCK TABLES `membership_type` WRITE;
 /*!40000 ALTER TABLE `membership_type` DISABLE KEYS */;
-INSERT INTO `membership_type` VALUES (1,'Monthly',30,200.00,'月卡会员，有效期30天'),(2,'Yearly',365,1200.00,'年卡会员，有效期365天');
+INSERT INTO `membership_type` VALUES (1,'月卡',30,200.00,'30天'),(2,'年卡',365,1200.00,'365天');
 /*!40000 ALTER TABLE `membership_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -365,14 +363,14 @@ DROP TABLE IF EXISTS `order`;
 CREATE TABLE `order` (
   `order_id` int NOT NULL AUTO_INCREMENT,
   `member_id` int DEFAULT NULL,
-  `order_type` enum('membership','product','course','recharge','renewal') NOT NULL,
+  `order_type` enum('membership','product','course','recharge','renewal') NOT NULL DEFAULT 'product',
   `amount` decimal(10,2) NOT NULL,
   `order_time` datetime NOT NULL,
   `payment_status` enum('paid','unpaid','pending','paid_by_balance','paid_by_cash') NOT NULL DEFAULT 'paid',
   PRIMARY KEY (`order_id`),
   KEY `member_id` (`member_id`),
   CONSTRAINT `order_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=114 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单表：存储所有类型的订单信息（会员卡、产品、课程）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单表：存储所有类型的订单信息（会员卡、产品、课程）';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -381,7 +379,6 @@ CREATE TABLE `order` (
 
 LOCK TABLES `order` WRITE;
 /*!40000 ALTER TABLE `order` DISABLE KEYS */;
-INSERT INTO `order` VALUES (1,1,'membership',1200.00,'2024-01-10 09:30:00','paid'),(2,2,'membership',200.00,'2024-11-15 14:20:00','paid'),(3,3,'membership',1200.00,'2024-03-05 10:15:00','paid'),(4,1,'product',114.00,'2024-02-20 15:30:00','paid'),(5,4,'membership',200.00,'2024-11-12 16:45:00','paid'),(6,2,'product',45.00,'2024-03-15 11:20:00','paid'),(7,6,'membership',200.00,'2024-11-08 13:20:00','paid'),(8,7,'membership',1200.00,'2024-07-15 15:10:00','paid'),(9,9,'membership',200.00,'2024-11-10 10:45:00','paid'),(10,10,'membership',1200.00,'2024-10-05 14:30:00','paid'),(11,3,'product',163.00,'2024-05-10 16:00:00','paid'),(12,6,'product',68.00,'2024-11-20 10:30:00','paid'),(13,7,'product',129.00,'2024-08-25 14:15:00','paid'),(14,1,'product',48.00,'2024-11-28 09:00:00','paid'),(15,5,'membership',1200.00,'2024-05-20 11:30:00','paid'),(73,NULL,'product',25.00,'2025-12-09 01:31:06','paid'),(74,NULL,'product',25.00,'2025-12-09 06:19:27','paid_by_cash'),(75,NULL,'product',178.00,'2025-12-09 06:19:33','paid_by_cash');
 /*!40000 ALTER TABLE `order` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -409,7 +406,6 @@ CREATE TABLE `order_product` (
 
 LOCK TABLES `order_product` WRITE;
 /*!40000 ALTER TABLE `order_product` DISABLE KEYS */;
-INSERT INTO `order_product` VALUES (4,1,1),(4,2,1),(6,3,1),(11,7,2),(11,8,1),(11,9,1),(12,9,1),(13,6,1),(14,10,1),(73,1,1),(74,1,1),(75,2,2);
 /*!40000 ALTER TABLE `order_product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -426,7 +422,7 @@ CREATE TABLE `product` (
   `price` decimal(10,2) NOT NULL,
   `stock` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='产品表：存储健身房销售的产品信息及库存';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='产品表：存储健身房销售的产品信息及库存';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -435,7 +431,7 @@ CREATE TABLE `product` (
 
 LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
-INSERT INTO `product` VALUES (1,'运动毛巾',25.00,100),(2,'瑜伽垫',89.00,48),(3,'运动水杯',45.00,80),(4,'护腕一对',35.00,60),(5,'健身手套',55.00,40),(6,'运动背包',129.00,30),(7,'弹力带',38.00,70),(8,'跳绳',28.00,90),(9,'瑜伽球',68.00,45),(10,'能量棒（10条装）',48.00,120);
+INSERT INTO `product` VALUES (1,'矿泉水',3.00,100),(2,'蛋白粉',450.00,20),(3,'毛巾',15.00,50);
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -460,7 +456,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`),
   KEY `idx_username` (`username`),
   KEY `idx_reference` (`user_type`,`reference_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -469,7 +465,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',14,'active','2025-12-08 16:53:08','2025-12-09 09:38:21','2025-12-09 09:38:21'),(2,'trainer','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',15,'active','2025-12-08 16:53:08','2025-12-08 16:53:08',NULL),(13,'xiaoning','k9l01HKUDzZPZvntmhuG1GDWAZ7ciA2tbCIxZWv4pC0=','member',39,'active','2025-12-09 01:27:03','2025-12-09 07:03:58','2025-12-09 07:03:58'),(14,'qiantai','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',4,'active','2025-12-09 01:29:21','2025-12-09 06:49:17','2025-12-09 06:49:17'),(15,'jack','k9l01HKUDzZPZvntmhuG1GDWAZ7ciA2tbCIxZWv4pC0=','member',40,'active','2025-12-09 07:15:29','2025-12-09 07:15:36','2025-12-09 07:15:36'),(16,'16728398982','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',74,'active','2025-12-09 09:09:10','2025-12-09 09:09:10',NULL),(17,'13800001111','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',1,'active','2025-12-09 09:17:50','2025-12-09 09:17:50',NULL);
+INSERT INTO `users` VALUES (1,'admin','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',1,'active','2025-12-13 10:43:42','2025-12-13 10:43:54','2025-12-13 10:43:54'),(2,'alice','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',2,'active','2025-12-13 10:43:42','2025-12-13 10:43:42',NULL),(3,'bob','jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=','employee',3,'active','2025-12-13 10:43:42','2025-12-13 10:43:42',NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -604,4 +600,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-09 17:42:31
+-- Dump completed on 2025-12-13 18:47:57
